@@ -1,1 +1,1 @@
-# 62_KiranaTS_Sanath_homeo_clinic
+# 62_KiranaTS_Capstone_Sanath_homeo_clinic
