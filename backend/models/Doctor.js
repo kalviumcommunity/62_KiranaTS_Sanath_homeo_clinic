@@ -27,14 +27,14 @@ const doctorSchema=new mongoose.Schema({
                 }
             }
         ],
-        default:()=> new Map(
+        default: () => new Map([
             ['Monday', []],
             ['Tuesday', []],
             ['Wednesday', []],
             ['Thursday', []],
             ['Friday', []],
             ['Saturday', []]
-        )
+          ])
     },
     holidays:{
         type:[Date],
