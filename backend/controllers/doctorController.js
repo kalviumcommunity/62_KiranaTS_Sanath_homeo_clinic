@@ -1,4 +1,6 @@
 const Doctor = require("../models/Doctor");
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 //login
 const login=async(req,res)=>{

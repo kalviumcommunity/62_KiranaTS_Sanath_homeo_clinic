@@ -15,7 +15,7 @@ app.use(express.json());
 app.use('/api/patients', patientRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/receptionists', receptionistRoutes);
-app.use('api/appointments', appointmentRoutes)
+app.use('/api/appointments', appointmentRoutes)
 app.use('/api/prescriptions', prescriptionRoutes);
 
 
