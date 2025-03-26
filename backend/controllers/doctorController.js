@@ -8,10 +8,10 @@ const Appointment=require('../models/Appointments');
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log("Received email:", email);
+        // console.log("Received email:", email);
 
         const doctor = await Doctor.findOne({ email });
-        console.log("Doctor fetched:", doctor);
+        // console.log("Doctor fetched:", doctor);
 
         if (!doctor) {
             return res.status(404).json({ message: "Doctor not found" });
