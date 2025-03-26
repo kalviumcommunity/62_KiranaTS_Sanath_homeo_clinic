@@ -1,4 +1,4 @@
-const Appointment = require('../models/Appointment');
+const Appointment = require('../models/Appointments');
 
 const createAppointment = async (req, res) => {
     const { doctorId, patientId, appointmentDate, appointmentTime, reason } = req.body;
@@ -29,4 +29,24 @@ const createAppointment = async (req, res) => {
     }
 };
 
-module.exports = { createAppointment };
+
+const getAllAppointments=async(req,res)=>{
+    try {
+        const appointments=await Appointment.find();
+        res.status(200).json({appointments});
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to book appointment', error: err.message });
+    }
+}
+
+const getAppointmentsByDoctor=async(req,res)=>{
+    const {doctorId}=req.params;
+    try {
+        const appointments=await Appointment.find({doctorId});
+        res.status(200).json({appointments});
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to book appointment', error: err.message });
+    }
+}
+
+module.exports = { createAppointment, getAllAppointments, getAppointmentsByDoctor };

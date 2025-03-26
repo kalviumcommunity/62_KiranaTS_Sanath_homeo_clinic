@@ -13,43 +13,9 @@ const doctorSchema=new mongoose.Schema({
         type:String,
         required: true,
     },
-    availableSlots:{
-        type: Map,
-        of:[
-            {
-                start:{
-                    type: String,
-                    required: true,
-                },
-                end:{
-                    type: String,
-                    required: true,
-                }
-            }
-        ],
-        default: () => new Map([
-            ['Monday', []],
-            ['Tuesday', []],
-            ['Wednesday', []],
-            ['Thursday', []],
-            ['Friday', []],
-            ['Saturday', []]
-          ])
-    },
-    holidays:{
-        type:[Date],
-        default:[],
-    },
-    blockedSlots:{
-        type: Map,
-        of:[
-            {
-                date: { type: Date, required: true },
-                start: { type: String, required: true },
-                end: { type: String, required: true }
-            }
-        ],
-        default:()=> new Map()
+    branch:{
+        type:String,
+        required: true,
     }
 })
 
