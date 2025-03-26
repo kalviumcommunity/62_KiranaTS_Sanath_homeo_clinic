@@ -106,7 +106,6 @@ const getAvailableSlots = async (req, res) => {
             doctorId,
             appointmentDate: inputDate
         });
-        });
 
         slots = slots.filter(slot => {
             for (let appt of bookedAppointments) {
