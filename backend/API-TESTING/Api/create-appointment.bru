@@ -1,0 +1,22 @@
+meta {
+  name: create-appointment
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:5000/api/appointments
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "doctorId": "67e39fe7ccbc9c04754684f1",
+    "patientId": "65f0df93ed9c2937d87356c9",
+    "appointmentDate": "2025-03-28",
+    "appointmentTime": "10:30 AM",
+    "reason": "Regular check-up"
+  }
+  
+}

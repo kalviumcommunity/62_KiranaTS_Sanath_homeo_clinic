@@ -32,7 +32,7 @@ const createAppointment = async (req, res) => {
 
 const getAllAppointments=async(req,res)=>{
     try {
-        const appointments=await Appointment.find();
+        const appointments=await Appointment.find().populate('patientId').populate({path: 'doctorId', select:'-password'});
         res.status(200).json({appointments});
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch appointments', error: error.message });
@@ -42,7 +42,7 @@ const getAllAppointments=async(req,res)=>{
 const getAppointmentsByDoctor=async(req,res)=>{
     const {doctorId}=req.params;
     try {
-        const appointments=await Appointment.find({doctorId});
+        const appointments=await Appointment.find({doctorId}).populate('patientId').populate({path: 'doctorId', select:'-password'});;
         res.status(200).json({appointments});
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch appointments by doctor', error: error.message });
