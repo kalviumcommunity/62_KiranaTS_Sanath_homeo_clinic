@@ -6,6 +6,7 @@ const doctorRoutes=require('./routes/doctorRoutes');
 const receptionistRoutes=require('./routes/receptionistRoutes');
 const appointmentRoutes=require('./routes/appointmentRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoute');
+const scheduleRouter=require('./routes/scheduleRoutes');
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use('/api/doctors', doctorRoutes);
 app.use('/api/receptionists', receptionistRoutes);
 app.use('/api/appointments', appointmentRoutes)
 app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/schedule', scheduleRouter)
 
 
 mongoose.connect(process.env.MONGO_URI).then(()=>{

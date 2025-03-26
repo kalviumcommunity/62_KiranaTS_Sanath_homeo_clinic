@@ -5,3 +5,6 @@ const { updateWeeklyAvailability, updateHolidayOrBlockedSlots } = require('../co
 
 router.put('/weekly/:doctorId', updateWeeklyAvailability);
 router.put('/modify/:doctorId', updateHolidayOrBlockedSlots);
+
+
+module.exports=router;
