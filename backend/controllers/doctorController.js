@@ -2,6 +2,7 @@ const Doctor = require("../models/Doctor");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const DoctorSchedule=require('../models/doctorSchedule')
+const Appointment=require('../models/Appointments');
 
 //login
 const login=async(req,res)=>{

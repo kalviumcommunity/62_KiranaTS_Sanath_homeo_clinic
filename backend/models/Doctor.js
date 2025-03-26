@@ -15,7 +15,7 @@ const doctorSchema=new mongoose.Schema({
     },
     branch:{
         type:String,
-        required: true,
+        required: true
     }
 })
 

@@ -35,7 +35,7 @@ const getAllAppointments=async(req,res)=>{
         const appointments=await Appointment.find();
         res.status(200).json({appointments});
     } catch (error) {
-        res.status(500).json({ message: 'Failed to book appointment', error: err.message });
+        res.status(500).json({ message: 'Failed to book appointment', error: error.message });
     }
 }
 
@@ -45,7 +45,7 @@ const getAppointmentsByDoctor=async(req,res)=>{
         const appointments=await Appointment.find({doctorId});
         res.status(200).json({appointments});
     } catch (error) {
-        res.status(500).json({ message: 'Failed to book appointment', error: err.message });
+        res.status(500).json({ message: 'Failed to book appointment', error: error.message });
     }
 }
 
