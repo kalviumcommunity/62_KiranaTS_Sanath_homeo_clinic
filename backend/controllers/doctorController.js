@@ -69,8 +69,7 @@ const setDoctorAvailability = async (req, res) => {
       res.status(500).json({ message: "Error setting availability", error });
     }
   };
-
-  const getAvailableSlots = async (req, res) => {
+const getAvailableSlots = async (req, res) => {
     const { doctorId } = req.params;
     const { date } = req.query;
 
@@ -106,6 +105,7 @@ const setDoctorAvailability = async (req, res) => {
         const bookedAppointments = await Appointment.find({
             doctorId,
             appointmentDate: inputDate
+        });
         });
 
         slots = slots.filter(slot => {
