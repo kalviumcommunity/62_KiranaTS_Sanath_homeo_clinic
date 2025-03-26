@@ -1,0 +1,33 @@
+meta {
+  name: prescription
+  type: http
+  seq: 11
+}
+
+post {
+  url: http://localhost:5000/api/prescriptions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "appointmentId": "67e3c38fe5d9fccfffee2ee3",
+    "doctorId": "67e39fe7ccbc9c04754684f1",
+    "patientId": "67e3a985fe786b8a02aa923b",
+    "medicines": [
+      {
+        "name": "Paracetamol",
+        "dosage": "500mg",
+        "timing": "Twice a day"
+      },
+      {
+        "name": "Ibuprofen",
+        "dosage": "200mg",
+        "timing": "Once after food"
+      }
+    ],
+    "instructions": "Drink plenty of water"
+  }
+  
+}

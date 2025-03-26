@@ -7,7 +7,7 @@ const updateWeeklyAvailability=async(req,res)=>{
         return res.status(400).json({ error: 'Weekly availability is required' });
     }
     try {
-        const schedule=await DoctorSchedule.findOneAndUpdate({doctorId}, {weeklyAvailability}, {new:true});
+        const schedule=await DoctorSchedule.findOneAndUpdate({doctorId}, {weeklyAvailability}, {new:true, upsert: true});
         if(!schedule){
             return res.status(404).json({ error: 'Doctor schedule not found' });
         }
@@ -32,7 +32,7 @@ const updateHolidayOrBlockedSlots=async(req,res)=>{
         const schedule = await DoctorSchedule.findOneAndUpdate(
             { doctorId },
             { $set: updateFields },
-            { new: true }
+            { new: true , upsert:true}
         );
 
         if (!schedule) {

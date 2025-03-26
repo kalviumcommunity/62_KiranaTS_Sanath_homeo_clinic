@@ -1,0 +1,29 @@
+meta {
+  name: block-schedule
+  type: http
+  seq: 10
+}
+
+put {
+  url: http://localhost:5000/api/schedule/schedule-adjustments/67e39fe7ccbc9c04754684f1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "blockedSlots": [
+      {
+        "date": "2025-04-10",
+        "start": "11:00",
+        "end": "12:00"
+      },
+      {
+        "date": "2025-04-11",
+        "start": "09:00",
+        "end": "10:00"
+      }
+    ]
+  }
+  
+}

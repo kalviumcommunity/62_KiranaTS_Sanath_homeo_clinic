@@ -1,0 +1,19 @@
+meta {
+  name: receptionist-login
+  type: http
+  seq: 13
+}
+
+post {
+  url: http://localhost:5000/api/receptionists/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "receptionist@example.com",
+    "password": "123456"
+  }
+  
+}

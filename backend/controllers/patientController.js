@@ -5,12 +5,12 @@ const Patient = require("../models/Patient");
 
 const signup=async(req,res)=>{
     try {
-        const {name, phone, dob, gender, email}=req.body;
+        const {name, phone, dob, gender, email, doctorId}=req.body;
         const existing=await Patient.findOne({phone, dob});
         if (existing) {
             return res.status(400).json({ message: "Patient already exists." });
         }
-        const newPatient=new Patient({name, phone, dob, gender, email})
+        const newPatient=new Patient({name, phone, dob, gender, email, doctorId})
         await newPatient.save();
         res.status(201).json({ message: "Patient registered successfully", patient: newPatient });
     } catch (error) {

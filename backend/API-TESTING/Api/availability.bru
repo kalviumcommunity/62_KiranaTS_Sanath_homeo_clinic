@@ -1,0 +1,25 @@
+meta {
+  name: availability
+  type: http
+  seq: 9
+}
+
+put {
+  url: http://localhost:5000/api/schedule/availability/67e39fe7ccbc9c04754684f1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "weeklyAvailability": {
+      "Monday": [{ "start": "09:00", "end": "12:00" }],
+      "Tuesday": [{ "start": "10:00", "end": "13:00" }],
+      "Wednesday": [],
+      "Thursday": [{ "start": "11:00", "end": "14:00" }],
+      "Friday": [{ "start": "09:00", "end": "12:00" }],
+      "Saturday": [{ "start": "10:00", "end": "11:30" }]
+    }
+  }
+  
+}
