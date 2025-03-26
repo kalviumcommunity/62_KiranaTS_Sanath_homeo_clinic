@@ -5,7 +5,8 @@
 
 Sanath Homeo Clinic is a website designed for managing Sanath Homeo Clinics and its simple interface makes the Doctor's job easy. This platform helps with interactions between both doctors and patients. Patients can book appointments, receive personalized medicine reminders either via WhatsApp or the calendar(their choice), and also give their feedback on their clinic and website experience. Doctors are capable of managing their schedule, holidays, and appointments through a dashboard, while the reception is exclusively dealing with all the bookings and schedules. With the help of a platform, one can also have connections with Google Calendar to assist the process and the users.
 
-
+## Deployment Links
+- backend Deployed link: https://six2-kiranats-sanath-homeo-clinic-1.onrender.com
 
 ## Features  
 - Doctor's calendar with holiday and clinic timing adjustments.  
