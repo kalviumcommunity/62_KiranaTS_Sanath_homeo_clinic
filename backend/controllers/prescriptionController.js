@@ -1,5 +1,5 @@
 const Prescription = require('../models/Prescription');
-const Appointment = require('../models/Appointment');
+const Appointment = require('../models/Appointments');
 const Doctor = require('../models/Doctor');
 
 const createPrescription = async (req, res) => {
@@ -31,4 +31,17 @@ const createPrescription = async (req, res) => {
     }
 };
 
-module.exports = { createPrescription };
+const getPrescriptionByAppointment=async(req,res)=>{
+    const {appointmentId}=req.params;
+    try {
+        const prescription=await Prescription.findOne({appointmentId});
+        if(!prescription){
+            return res.status(404).json({message: 'Prescription not found'});
+        }
+        res.status(200).json({prescription});
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching prescription', error: error.message });
+    }
+}
+
+module.exports = { createPrescription, getPrescriptionByAppointment };

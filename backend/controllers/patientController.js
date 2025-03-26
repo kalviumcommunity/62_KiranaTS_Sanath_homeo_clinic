@@ -1,3 +1,4 @@
+const Appointment = require("../models/Appointments");
 const Patient = require("../models/Patient");
 
 //register
@@ -32,5 +33,14 @@ const login=async(req,res)=>{
         res.status(500).json({ message: 'Server error', error });
     }
 }
+const getPatientsForDoc=async(req,res)=>{
+    const {doctorId}=req.params;
+    try {
+        const patients=await Patient.find({doctorId});
+        res.status(200).json({patients});
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching patients', error });
+    }
+}
 
-module.exports={signup, login};
+module.exports={signup, login, getPatientsForDoc};
