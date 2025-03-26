@@ -10,7 +10,7 @@ const login = async (req, res) => {
         const { email, password } = req.body;
         // console.log("Received email:", email);
 
-        const doctor = await Doctor.findOne({ email });
+        const doctor = await Doctor.findOne({ email }).select('+password -__v');
         // console.log("Doctor fetched:", doctor);
 
         if (!doctor) {
