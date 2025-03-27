@@ -7,6 +7,7 @@ Sanath Homeo Clinic is a website designed for managing Sanath Homeo Clinics and 
 
 ## Deployment Links
 - backend Deployed link: https://six2-kiranats-sanath-homeo-clinic-1.onrender.com
+- Frontend Deployed link: https://sanath-homeo-clinic.netlify.app/
 
 ## Features  
 - Doctor's calendar with holiday and clinic timing adjustments.  
