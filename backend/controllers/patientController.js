@@ -3,6 +3,8 @@ const Patient = require("../models/Patient");
 const jwt=require('jsonwebtoken');
 const cookie=require('cookie-parser');
 const bcrypt=require('bcryptjs');
+const Prescription = require('../models/Prescription');
+
 
 //register
 
@@ -35,7 +37,7 @@ const login=async(req,res)=>{
 
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: process.env.NODE_ENV === 'PRODUCTION',
             sameSite: 'Strict',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });

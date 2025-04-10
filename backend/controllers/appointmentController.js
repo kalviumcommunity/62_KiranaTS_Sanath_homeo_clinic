@@ -1,4 +1,6 @@
 const Appointment = require('../models/Appointments');
+const Prescription = require('../models/Prescription');
+
 
 const createAppointment = async (req, res) => {
     const { doctorId, appointmentDate, appointmentTime, reason } = req.body;

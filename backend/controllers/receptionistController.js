@@ -2,6 +2,8 @@ const Receptionist = require('../models/Receptionist');
 const jwt=require('jsonwebtoken');
 const cookie=require('cookie-parser');
 const bcrypt=require('bcryptjs');
+const Prescription = require('../models/Prescription');
+
 
 const login = async (req, res) => {
     try {

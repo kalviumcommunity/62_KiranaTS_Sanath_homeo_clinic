@@ -1,6 +1,7 @@
-const Prescription = require('../models/Prescription');
 const Appointment = require('../models/Appointments');
 const Doctor = require('../models/Doctor');
+const Prescription = require('../models/Prescription');
+
 
 const createPrescription = async (req, res) => {
     const { appointmentId, medicines, instructions } = req.body;

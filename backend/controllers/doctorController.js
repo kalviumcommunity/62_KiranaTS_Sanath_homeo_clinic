@@ -5,6 +5,8 @@ const bcrypt = require('bcryptjs');
 const DoctorSchedule = require('../models/doctorSchedule');
 const Appointment = require('../models/Appointments');
 const mongoose = require('mongoose');
+const Prescription = require('../models/Prescription');
+
 
 // Doctor Login
 const login = async (req, res) => {
