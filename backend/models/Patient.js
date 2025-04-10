@@ -7,7 +7,7 @@ const patientSchema= new mongoose.Schema({
     phone:{
         type: Number,
         required: true,
-        unique: true,
+         // no unique: true
     },
     dob:{
         type: Date,

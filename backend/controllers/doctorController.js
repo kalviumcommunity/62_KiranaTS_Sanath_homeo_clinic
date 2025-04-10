@@ -1,17 +1,19 @@
 const Doctor = require("../models/Doctor");
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const DoctorSchedule=require('../models/doctorSchedule')
-const Appointment=require('../models/Appointments');
+const cookie = require('cookie-parser');
+const bcrypt = require('bcryptjs');
+const DoctorSchedule = require('../models/doctorSchedule');
+const Appointment = require('../models/Appointments');
+const mongoose = require('mongoose');
+const Prescription = require('../models/Prescription');
 
-//login
+
+// Doctor Login
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        // console.log("Received email:", email);
 
-        const doctor = await Doctor.findOne({ email }).select('+password -__v');
-        // console.log("Doctor fetched:", doctor);
+        const doctor = await Doctor.findOne({ email }).select('+password');
 
         if (!doctor) {
             return res.status(404).json({ message: "Doctor not found" });
@@ -23,10 +25,12 @@ const login = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: doctor._id, role: "doctor" },
+            { _id: doctor._id, role: 'doctor' },
             process.env.JWT_SECRET,
-            { expiresIn: '14d' }
+            { expiresIn: '1d' }
         );
+
+        res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict' });
 
         res.status(200).json({
             message: "Login successful",
@@ -38,41 +42,47 @@ const login = async (req, res) => {
     }
 };
 
-
-const getAllDoctors=async(req,res)=>{
+// Get All Doctors
+const getAllDoctors = async (req, res) => {
     try {
-        const doctors=await Doctor.find({}, 'name email');
-        res.status(200).json({doctors});
+        const doctors = await Doctor.find({}, 'name email');
+        res.status(200).json({ doctors });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching doctors', error: error.message });
     }
-}
+};
 
+// Set Doctor Weekly Availability
 const setDoctorAvailability = async (req, res) => {
-    const { doctorId } = req.params;
+    const doctorId = new mongoose.Types.ObjectId(req.user._id);
     const { weeklyAvailability } = req.body;
+
     if (!weeklyAvailability) {
-      return res.status(400).json({ message: "weeklyAvailability is required" });
+        return res.status(400).json({ message: "weeklyAvailability is required" });
     }
+
     try {
-      let schedule = await DoctorSchedule.findOne({ doctorId });
-      if (!schedule) {
-        schedule = new DoctorSchedule({
-          doctorId,
-          weeklyAvailability
-        });
-      } else {
-        for (const day in weeklyAvailability) {
-          schedule.weeklyAvailability[day] = weeklyAvailability[day];
+        let schedule = await DoctorSchedule.findOne({ doctorId });
+
+        if (!schedule) {
+            schedule = new DoctorSchedule({
+                doctorId,
+                weeklyAvailability
+            });
+        } else {
+            for (const day in weeklyAvailability) {
+                schedule.weeklyAvailability[day] = weeklyAvailability[day];
+            }
         }
-      }
-  
-      await schedule.save();
-      res.status(200).json({ message: "Availability set successfully", schedule });
+
+        await schedule.save();
+        res.status(200).json({ message: "Availability set successfully", schedule });
     } catch (error) {
-      res.status(500).json({ message: "Error setting availability", error });
+        res.status(500).json({ message: "Error setting availability", error });
     }
-  };
+};
+
+// Get Available Slots for a Doctor on a Specific Date
 const getAvailableSlots = async (req, res) => {
     const { doctorId } = req.params;
     const { date } = req.query;
@@ -86,14 +96,14 @@ const getAvailableSlots = async (req, res) => {
         const inputDate = new Date(date);
         const day = inputDate.toLocaleString('en-US', { weekday: 'long' });
 
-        // Check if holiday
+        // If it's a holiday, return no slots
         if (schedule.holidays.some(d => d.toDateString() === inputDate.toDateString())) {
-            return res.json([]); // no slots if holiday
+            return res.json([]);
         }
 
         let slots = schedule.weeklyAvailability[day] || [];
 
-        // Remove blocked slots
+        // Filter out blocked slots
         const blocked = schedule.blockedSlots.filter(b =>
             new Date(b.date).toDateString() === inputDate.toDateString()
         );
@@ -105,7 +115,7 @@ const getAvailableSlots = async (req, res) => {
             return true;
         });
 
-        // Remove booked appointments
+        // Filter out booked slots
         const bookedAppointments = await Appointment.find({
             doctorId,
             appointmentDate: inputDate
@@ -125,4 +135,9 @@ const getAvailableSlots = async (req, res) => {
     }
 };
 
-module.exports={login, getAllDoctors, setDoctorAvailability, getAvailableSlots};
+module.exports = {
+    login,
+    getAllDoctors,
+    setDoctorAvailability,
+    getAvailableSlots
+};

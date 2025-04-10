@@ -1,27 +1,36 @@
-const Prescription = require('../models/Prescription');
 const Appointment = require('../models/Appointments');
 const Doctor = require('../models/Doctor');
+const Prescription = require('../models/Prescription');
+
 
 const createPrescription = async (req, res) => {
-    const { appointmentId, doctorId, patientId, medicines, instructions } = req.body;
+    const { appointmentId, medicines, instructions } = req.body;
+    const doctorId = req.user.id;
+
     try {
         const appointment = await Appointment.findById(appointmentId);
+
         if (!appointment) {
             return res.status(404).json({ message: 'Appointment not found' });
         }
+
         if (appointment.doctorId.toString() !== doctorId) {
             return res.status(403).json({ message: 'This doctor is not assigned to this appointment' });
         }
+
         const prescription = new Prescription({
             appointmentId,
             doctorId,
-            patientId,
+            patientId: appointment.patientId,
             medicines,
             instructions
         });
+
         await prescription.save();
+
         appointment.prescription = prescription._id;
         await appointment.save();
+
         res.status(201).json({
             message: 'Prescription created successfully',
             prescription
