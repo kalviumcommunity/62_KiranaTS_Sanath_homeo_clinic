@@ -1,6 +1,7 @@
 const Receptionist = require('../models/Receptionist');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const jwt=require('jsonwebtoken');
+const cookie=require('cookie-parser');
+const bcrypt=require('bcryptjs');
 
 const login = async (req, res) => {
     try {
@@ -17,10 +18,12 @@ const login = async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: receptionist._id, role: "receptionist" },
+            { _id: receptionist._id, role: 'receptionist' },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
+        res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict' });
+          
 
         res.status(200).json({
             message: "Login successful",

@@ -1,7 +1,8 @@
 const Appointment = require('../models/Appointments');
 
 const createAppointment = async (req, res) => {
-    const { doctorId, patientId, appointmentDate, appointmentTime, reason } = req.body;
+    const { doctorId, appointmentDate, appointmentTime, reason } = req.body;
+    const patientId = req.user.id;
 
     try {
         const existingAppointment = await Appointment.findOne({
@@ -40,7 +41,7 @@ const getAllAppointments=async(req,res)=>{
 }
 
 const getAppointmentsByDoctor=async(req,res)=>{
-    const {doctorId}=req.params;
+    const doctorId=req.user.id
     try {
         const appointments=await Appointment.find({doctorId}).populate('patientId').populate({path: 'doctorId', select:'-password'});
         res.status(200).json({appointments});

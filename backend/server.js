@@ -13,6 +13,10 @@ dotenv.config();
 const app=express();
 app.use(express.json());
 
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
+
 app.use('/api/patients', patientRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/receptionists', receptionistRoutes);

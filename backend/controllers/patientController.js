@@ -1,5 +1,8 @@
-const Appointment = require("../models/Appointments");
+// const Appointment = require("../models/Appointments");
 const Patient = require("../models/Patient");
+const jwt=require('jsonwebtoken');
+const cookie=require('cookie-parser');
+const bcrypt=require('bcryptjs');
 
 //register
 
@@ -25,18 +28,28 @@ const login=async(req,res)=>{
             return res.status(400).json({ message: 'Phone and Date of Birth are required' });
         }
         const patient=await Patient.findOne({phone, dob});
-        if (!patient) {
-            return res.status(404).json({ message: 'Invalid login credentials' });
+        if (!patient || patient.dob.toISOString().split('T')[0] !== dob) {
+            return res.status(401).json({ message: "Invalid credentials" });
         }
-        res.status(200).json({ message: 'Login successful', patient });
+        const token=jwt.sign({id: patient._id, role:"patient"}, process.env.JWT_SECRET, {expiresIn: '7d'});
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(200).json({ message: 'Login successful', token, patient });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error });
+        console.error('Login error:', error);
+        res.status(500).json({error});
     }
 }
 const getPatientsForDoc=async(req,res)=>{
-    const {doctorId}=req.params;
+    const doctorId = req.user.id;
+    const patients = await Patient.find({ doctorId });
     try {
-        const patients=await Patient.find({doctorId});
         res.status(200).json({patients});
     } catch (error) {
         res.status(500).json({ message: 'Error fetching patients', error });

@@ -1,7 +1,7 @@
 const DoctorSchedule = require("../models/doctorSchedule");
 
 const updateWeeklyAvailability=async(req,res)=>{
-    const {doctorId}=req.params;
+    const doctorId=req.user.id;
     const {weeklyAvailability}=req.body;
     if(!weeklyAvailability){
         return res.status(400).json({ error: 'Weekly availability is required' });
@@ -19,7 +19,7 @@ const updateWeeklyAvailability=async(req,res)=>{
 }
 
 const updateHolidayOrBlockedSlots=async(req,res)=>{
-    const {doctorId}=req.params;
+    const doctorId=req.user.id;
     const {holidays, blockedSlots}=req.body;
     if (!holidays && !blockedSlots) {
         return res.status(400).json({ error: 'No updates provided' });
