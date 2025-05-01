@@ -23,7 +23,7 @@ export default function ContactUs() {
             phone: "+91 84316 65346",
             email: "hennur@sanathhomeoclinic.com",
             address: "Sree, Byraveshwara Layout, 85, 2nd Main Rd, Hennur Bande, Hennur Gardens, Bengaluru, Karnataka 560043",
-            mapLink: "https://www.google.com/maps?s=web&lqi=CiFzYW5hdGggaG9tZW8gY2xpbmljIGhlbm51ciBicmFuY2haLSIhc2FuYXRoIGhvbWVvIGNsaW5pYyBoZW5udXIgYnJhbmNoKggIAhAAEAEQApIBCWhvbWVvcGF0aKoBSxABMiAQASIcu2oZ4rLVUuZ-pT6abI8YlLQJldGQ3LI0EtAymTIlEAIiIXNhbmF0aCBob21lbyBjbGluaWMgaGVubnVyIGJyYW5jaA",
+            mapLink: "https://www.google.com/maps/place/Sanath's+Homeopathy+(+Hennur+Branch+Clinic+)",
             timings: "On Appointment (Closed Sun)",
         },
     ];

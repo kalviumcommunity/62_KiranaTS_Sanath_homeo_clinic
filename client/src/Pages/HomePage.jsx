@@ -4,7 +4,7 @@ export default function Homepage() {
   return (
     <>
 
-      <div className="min-h-screen w-full bg-[#CDBD89] flex flex-col overflow-x-hidden">
+      <div className="min-h-screen w-full bg-[#CDBD89] flex flex-col overflow-x-hidden pb-28">
         {/* Navbar */}
         <nav
           className="fixed top-0 left-0 w-full z-50 p-4 flex flex-col md:flex-row items-center shadow-2xl bg-[#E8E669]"
