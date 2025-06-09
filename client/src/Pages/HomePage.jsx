@@ -1,117 +1,169 @@
-import { Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
+import Navbar from "../components/NavBar";
+import Carousel from "../components/carousel";
+import TreatmentsOffered from "../components/TreatmentsOffered";
+import Branches from "../components/Branches";
+import CountUpNumber from "../components/SmallerComponents/CountUpComponent";
+import Doctors from "../components/Doctors";
 
 export default function Homepage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+    const { ref: aboutRef, inView: aboutInView } = useInView({
+    triggerOnce: true,
+    threshold: 0.3,
+  });
+
+useEffect(() => {
+  if (location.hash === "#branches") {
+    const el = document.getElementById("branches");
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth" });
+      }, 200);
+    }
+  } else if (location.hash === "#doctors") {
+    const el = document.getElementById("doctors");
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth" });
+      }, 200);
+    }
+  }
+}, [location]);
   return (
-    <>
+    <div className="min-h-screen bg-white">
+      <Navbar />
 
-      <div className="min-h-screen w-full bg-[#CDBD89] flex flex-col overflow-x-hidden">
-        {/* Navbar */}
-        <nav
-          className="fixed top-0 left-0 w-full z-50 p-4 flex flex-col md:flex-row items-center shadow-2xl bg-[#E8E669]"
-          style={{ height: "100px" }}
+      {/* Hero / Carousel Section */}
+      <main className="container mx-auto px-4 py-8">
+        <Carousel />
+      </main>
+
+      {/* Treatments Section */}
+      <section className="px-4">
+        {/* Mobile Button */}
+        <button
+          onClick={() => navigate("/treatments")}
+          className="sm:hidden w-full mb-6 px-5 py-3 bg-[#CC7A47] text-white rounded-md font-semibold shadow-md"
         >
-          {/* Logo */}
-          <div className="flex items-center justify-center mb-2 md:mb-0 md:mr-4">
-            <img
-              src="/images/logo.png"
-              alt="Sanath Homeo Clinic Logo"
-              className="h-12 md:h-20 max-w-full"
-            />
+          Treatments Offered
+        </button>
+
+        {/* Desktop View */}
+        <div className="hidden sm:block">
+          <div className="mb-6">
+            <h2 className="text-[#C08A69] text-4xl font-['Poppins'] font-semibold">
+              Treatments <span className="font-normal">offered</span>
+            </h2>
+            <div className="w-20 h-1 bg-[#C08A69]"></div>
+          </div>
+          <TreatmentsOffered />
+        </div>
+      </section>
+
+      {/* Branches Section */}
+      <section className="px-4">
+        {/* Mobile Button */}
+        <button
+          onClick={() => navigate("/branches")}
+          className="sm:hidden w-full mb-6 px-5 py-3 bg-[#429DAB] text-white rounded-md font-semibold shadow-md"
+        >
+          Our Branches
+        </button>
+
+        {/* Desktop View */}
+        <div className="hidden sm:block" id="branches">
+          <div className="mb-6">
+            <h2 className="text-[#429DAB] text-4xl font-['Poppins'] font-normal">
+              Our <span className="font-semibold">Branches</span>
+            </h2>
+            <div className="w-20 h-1 bg-[#429DAB]"></div>
+          </div>
+          <Branches />
+        </div>
+      </section>
+
+      <section ref={aboutRef}className="px-4 py-12 max-w-4xl mx-auto">
+          <div className="mb-10">
+              <h2 className="text-4xl font-semibold text-[#2C5E3E] font-['Poppins'] mb-4">
+                  <span className="font-semibold">About</span>
+                  <span className="font-light"> Us</span>
+              </h2>
+              <div className="w-20 h-1 bg-[#74A280]"></div>
           </div>
 
-          {/* Title */}
-          <div className="flex w-full items-center justify-center gap-3">
-            <span className="text-2xl md:text-4xl font-bold text-black text-center" style={{ fontFamily: 'Merriweather' }}>
-              SANATH HOMEO CLINIC
-            </span>
+          <div className="space-y-6 text-[#333333] leading-relaxed">
+              <p className="text-lg">
+                  Sanath Homeopathy Clinics—with locations in Horamavu, Hennur, and Kammanahalli—are 
+                  <span className="font-medium"> centers of excellence in classical and predictive homeopathy</span>. 
+                  Under the expert guidance of Dr. Sanathkumar and Dr. Hema Sanath, our clinics have 
+                  delivered compassionate care and clinical excellence to the Bangalore community for 
+                  over two decades.
+              </p>
 
-            {/* Navbar Buttons */}
-            <div className="hidden md:flex gap-4 ml-auto">
-            {[
-                { label: "About", path: "/about" },
-                { label: "Contact us", path: "/contact-us" },
-                { label: "Login", path: "/coming-soon" },
-                { label: "Sign up", path: "/coming-soon" },
-              ].map(({ label, path }) => (
-                <Link
-                  key={label}
-                  to={path}
-                  className="text-black hover:before:bg-[#0082BA] relative h-[40px] w-24 overflow-hidden border border-[#2CE663] bg-white px-2 text-center text-sm shadow-2xl transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-[#2CE663] before:transition-all before:duration-500 hover:text-white hover:shadow-[#CB5BCC] hover:before:left-0 hover:before:w-full flex items-center justify-center"
-                >
-                  <span className="relative z-10">{label}</span>
-                </Link>
-              ))}
+              <p className="text-lg">
+                  Our <span className="font-medium">patient-centered approach</span> creates healing environments 
+                  where individuals feel genuinely heard and supported. We specialize in treating 
+                  everything from acute conditions to complex chronic ailments—including cases often 
+                  considered challenging in other medical systems—through our whole-person methodology 
+                  that addresses physical, emotional, and mental wellbeing.
+              </p>
+
+              <p className="text-lg">
+                  Recognized for our <span className="font-medium">ethical practice standards</span> and 
+                  <span className="font-medium"> evidence-based results</span>, Sanath Homeopathy Clinics have become 
+                  trusted healthcare partners for generations of families. Our patients return not only 
+                  for treatment but for the lasting relationships and hope we cultivate through 
+                  personalized care.
+              </p>
+          </div>
+
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-6 text-center">
+          <div className="p-4">
+            <div className="text-3xl font-bold text-[#2C5E3E]">
+              <CountUpNumber end={25} shouldStart={aboutInView} />+
             </div>
+            <div className="text-sm uppercase tracking-wider text-[#74A280]">Years Experience</div>
           </div>
-        </nav>
-
-        {/* Main Content */}
-        <div className="flex flex-col items-center justify-center pt-40 md:pt-50 px-4 md:px-6 gap-20">
-          {/* Heading */}
-          <h1 className="text-3xl md:text-5xl font-bold text-white text-center">
-            Our Branches
-          </h1>
-
-          {/* Branch Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-12 px-4 w-full">
-            {[
-              { name: "Horamavu", link: "/horamavu", doctor: "Dr. Hema Sanath" },
-              { name: "Kammanahalli", link: "/kammanahalli", doctor: "Dr. Sanath Kumar" },
-              { name: "Hennur", link: "/hennur" }
-            ].map((branch) => (
-              <div
-                key={branch.name}
-                className={`bg-white rounded-xl p-14 flex flex-col items-center justify-between transition-transform duration-300 ${
-                  branch.name === "Kammanahalli"
-                    ? "shadow-2xl transform scale-105"
-                    : "shadow-xl"
-                } hover:scale-110`}
-              >
-                <h2 className="text-xl md:text-2xl font-bold mb-4 text-center text-black">
-                  {branch.name} Branch
-                </h2>
-
-                <img
-                  src={`/images/${branch.name}.png`}
-                  alt={`${branch.name} Clinic`}
-                  className="rounded-lg h-40 w-full object-cover mb-6"
-                />
-
-                {branch.doctor && (
-                  <h3 className="text-xl md:text-1xl font-bold mb-4 text-center text-black">
-                    {branch.doctor}
-                  </h3>
-                )}
-
-                <Link
-                  to={branch.link}
-                  className="bg-[#2CE663] hover:bg-[#2CE663] text-white font-semibold py-2 px-6 rounded-full transition duration-300"
-                >
-                  Contact Us
-                </Link>
-              </div>
-            ))}
+          <div className="p-4">
+            <div className="text-3xl font-bold text-[#2C5E3E]">
+              <CountUpNumber end={3} shouldStart={aboutInView} />
+            </div>
+            <div className="text-sm uppercase tracking-wider text-[#74A280]">Clinics</div>
           </div>
-
-          {/* Small screen navbar buttons */}
-          <div className="flex md:hidden gap-4 mt-8">
-              {[
-                { label: "About", path: "/about" },
-                { label: "Contact us", path: "/contact-us" },
-                { label: "Login", path: "/coming-soon" },
-                { label: "Sign up", path: "/coming-soon" },
-              ].map(({ label, path }) => (
-                <Link
-                  key={label}
-                  to={path}
-                  className="text-black hover:before:bg-[#0082BA] relative h-[40px] w-24 overflow-hidden border border-[#2CE663] bg-white px-2 text-center text-sm shadow-2xl transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-[#2CE663] before:transition-all before:duration-500 hover:text-white hover:shadow-[#CB5BCC] hover:before:left-0 hover:before:w-full flex items-center justify-center"
-                >
-                  <span className="relative z-10">{label}</span>
-                </Link>
-              ))}
+          <div className="p-4">
+            <div className="text-3xl font-bold text-[#2C5E3E]">
+              <CountUpNumber end={10000} shouldStart={aboutInView} />+
+            </div>
+            <div className="text-sm uppercase tracking-wider text-[#74A280]">Patients Treated</div>
           </div>
         </div>
-      </div>
-    </>
+      </section>
+
+      {/* Doctors Section */}
+      <section className="px-4">
+        {/* Mobile Button */}
+        <button
+          onClick={() => navigate("/doctors")}
+          className="sm:hidden w-full mb-6 px-5 py-3 bg-[#7384B0] text-white rounded-md font-semibold shadow-md"
+        >
+          Our Doctors
+        </button>
+
+        {/* Desktop View */}
+        <div className="hidden sm:block" id="doctors">
+          <div className="mb-6">
+            <h2 className="text-[#7384B0] text-4xl font-['Poppins'] font-normal">
+              Our <span className="font-semibold">Doctors</span>
+            </h2>
+            <div className="w-20 h-1 bg-[#7384B0]"></div>
+          </div>
+          <Doctors/>
+        </div>
+      </section>
+    </div>
   );
 }

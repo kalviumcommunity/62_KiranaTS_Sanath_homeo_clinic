@@ -5,7 +5,6 @@ const bcrypt = require('bcryptjs');
 const DoctorSchedule = require('../models/doctorSchedule');
 const Appointment = require('../models/Appointments');
 const mongoose = require('mongoose');
-const Prescription = require('../models/Prescription');
 
 
 // Doctor Login
@@ -45,7 +44,7 @@ const login = async (req, res) => {
 // Get All Doctors
 const getAllDoctors = async (req, res) => {
     try {
-        const doctors = await Doctor.find({}, 'name email');
+        const doctors = await Doctor.find({}, 'name branch');
         res.status(200).json({ doctors });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching doctors', error: error.message });
