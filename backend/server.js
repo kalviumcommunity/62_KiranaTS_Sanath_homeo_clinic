@@ -8,12 +8,17 @@ const receptionistRoutes=require('./routes/receptionistRoutes');
 const appointmentRoutes=require('./routes/appointmentRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoute');
 const scheduleRouter=require('./routes/scheduleRoutes');
+const authRoutes=require('./routes/authRoutes')
 
 dotenv.config();
 
 const app=express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
+
 
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
@@ -25,6 +30,7 @@ app.use('/api/receptionists', receptionistRoutes);
 app.use('/api/appointments', appointmentRoutes)
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/schedule', scheduleRouter)
+app.use('/api/auth', authRoutes)
 
 
 mongoose.connect(process.env.MONGO_URI).then(()=>{

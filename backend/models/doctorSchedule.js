@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-
+const mongoose=require('mongoose')
 const doctorScheduleSchema = new mongoose.Schema({
     doctorId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -8,12 +7,48 @@ const doctorScheduleSchema = new mongoose.Schema({
         unique: true
     },
     weeklyAvailability: {
-        Monday: [{ start: String, end: String }],
-        Tuesday: [{ start: String, end: String }],
-        Wednesday: [{ start: String, end: String }],
-        Thursday: [{ start: String, end: String }],
-        Friday: [{ start: String, end: String }],
-        Saturday: [{ start: String, end: String }]
+        Monday: [
+            {
+                branch: { type: String, required: true },
+                start: { type: String, required: true },
+                end: { type: String, required: true }
+            }
+        ],
+        Tuesday: [
+            {
+                branch: { type: String, required: true },
+                start: { type: String, required: true },
+                end: { type: String, required: true }
+            }
+        ],
+        Wednesday: [
+            {
+                branch: { type: String, required: true },
+                start: { type: String, required: true },
+                end: { type: String, required: true }
+            }
+        ],
+        Thursday: [
+            {
+                branch: { type: String, required: true },
+                start: { type: String, required: true },
+                end: { type: String, required: true }
+            }
+        ],
+        Friday: [
+            {
+                branch: { type: String, required: true },
+                start: { type: String, required: true },
+                end: { type: String, required: true }
+            }
+        ],
+        Saturday: [
+            {
+                branch: { type: String, required: true },
+                start: { type: String, required: true },
+                end: { type: String, required: true }
+            }
+        ]
     },
     holidays: [Date],
     blockedSlots: [
@@ -24,6 +59,3 @@ const doctorScheduleSchema = new mongoose.Schema({
         }
     ]
 });
-
-const DoctorSchedule = mongoose.model('DoctorSchedule', doctorScheduleSchema);
-module.exports = DoctorSchedule;
