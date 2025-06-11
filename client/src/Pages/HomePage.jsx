@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import Navbar from "../components/NavBar";
-import Carousel from "../components/carousel";
+import Carousel from "../components/Carousel";
 import TreatmentsOffered from "../components/TreatmentsOffered";
 import Branches from "../components/Branches";
 import CountUpNumber from "../components/SmallerComponents/CountUpComponent";
@@ -15,6 +15,7 @@ export default function Homepage() {
     triggerOnce: true,
     threshold: 0.3,
   });
+  
 
 useEffect(() => {
   if (location.hash === "#branches") {
