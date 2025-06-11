@@ -8,46 +8,105 @@ const Prescription = require('../models/Prescription');
 
 //register
 
-const signup=async(req,res)=>{
+const signup = async (req, res) => {
     try {
-        const {name, phone, dob, gender, email, doctorId}=req.body;
-        const existing=await Patient.findOne({phone, dob});
+        const { name, phone, dob, gender, email, doctorId } = req.body;
+        const picture = req.file?.filename;
+        
+        if (!picture) {
+            return res.status(400).json({ message: "Picture is required" });
+        }
+
+        const existing = await Patient.findOne({ phone, dob });
         if (existing) {
             return res.status(400).json({ message: "Patient already exists." });
         }
-        const newPatient=new Patient({name, phone, dob, gender, email, doctorId})
+
+        const newPatient = new Patient({ name, phone, dob, gender, email, doctorId, picture });
         await newPatient.save();
-        res.status(201).json({ message: "Patient registered successfully", patient: newPatient });
-    } catch (error) {
-        res.status(500).json({ message: "Error signing up patient", error });
-    }
-}
 
-const login=async(req,res)=>{
-    try {
-        const {phone, dob}=req.body;
-        if(!phone || !dob){
-            return res.status(400).json({ message: 'Phone and Date of Birth are required' });
-        }
-        const patient=await Patient.findOne({phone, dob});
-        if (!patient || patient.dob.toISOString().split('T')[0] !== dob) {
-            return res.status(401).json({ message: "Invalid credentials" });
-        }
-        const token=jwt.sign({id: patient._id, role:"patient"}, process.env.JWT_SECRET, {expiresIn: '7d'});
+        // Generate token for new patient
+        const token = jwt.sign(
+            { id: newPatient._id, role: "patient" },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
 
+        // Set cookie
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'PRODUCTION',
-            sameSite: 'Strict',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
-        res.status(200).json({ message: 'Login successful', token, patient });
+        res.status(201).json({ 
+            message: "Patient registered successfully", 
+            token,
+            patient: newPatient 
+        });
     } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({error});
+        res.status(500).json({ message: "Error signing up patient", error });
     }
-}
+};
+
+const login = async (req, res) => {
+  try {
+    const { phone, dob } = req.body;
+
+    if (!phone || !dob) {
+      return res.status(400).json({ message: 'Phone and Date of Birth are required' });
+    }
+
+    const patient = await Patient.findOne({ phone });
+    if (!patient) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Convert both to Date and compare only date parts
+    const inputDOB = new Date(dob);
+    const dbDOB = new Date(patient.dob);
+
+    const isSameDate =
+      inputDOB.getFullYear() === dbDOB.getFullYear() &&
+      inputDOB.getMonth() === dbDOB.getMonth() &&
+      inputDOB.getDate() === dbDOB.getDate();
+
+    if (!isSameDate) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      { id: patient._id, role: 'patient' },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Set HTTP-only cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // use 'production' not 'PRODUCTION'
+      sameSite: 'Strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Optional: send token in response if needed for JS usage
+    res.status(200).json({
+      message: 'Login successful',
+      token, // this is optional if cookie is used
+      patient: {
+        _id: patient._id,
+        name: patient.name,
+        phone: patient.phone,
+        email: patient.email,
+      },
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 const getPatientsForDoc=async(req,res)=>{
     const doctorId = req.user.id;
     const patients = await Patient.find({ doctorId });

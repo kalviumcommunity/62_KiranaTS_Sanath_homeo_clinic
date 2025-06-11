@@ -26,7 +26,7 @@ const login = async (req, res) => {
         const token = jwt.sign(
             { id: doctor._id, role: 'doctor' },
             process.env.JWT_SECRET,
-            { expiresIn: '1d' }
+            { expiresIn: '30d' }
         );
 
         res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict' });
@@ -44,7 +44,7 @@ const login = async (req, res) => {
 // Get All Doctors
 const getAllDoctors = async (req, res) => {
     try {
-        const doctors = await Doctor.find({}, 'name branch');
+        const doctors = await Doctor.find({}, 'name branch availability');
         res.status(200).json({ doctors });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching doctors', error: error.message });

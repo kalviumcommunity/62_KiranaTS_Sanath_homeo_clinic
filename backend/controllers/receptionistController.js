@@ -22,7 +22,7 @@ const login = async (req, res) => {
         const token = jwt.sign(
             { _id: receptionist._id, role: 'receptionist' },
             process.env.JWT_SECRET,
-            { expiresIn: '1d' }
+            { expiresIn: '6d' }
         );
         res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict' });
           
