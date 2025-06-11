@@ -38,6 +38,16 @@ export default function Navbar() {
     }
   };
 
+  //book appointment button
+  const handleBookAppointment = () => {
+    const isLoggedIn = document.cookie.includes("token");
+    if (!isLoggedIn) {
+      navigate("/patients/login");
+    } else {
+      navigate("/appointments");
+    }
+  };
+
   const navButtons = [
     { label: "Branches", onClick: handleBranchesClick },
     { label: "Our Doctors", onClick: handleDoctorsClick },
@@ -76,7 +86,7 @@ export default function Navbar() {
               </button>
             ))}
           </div>
-          <button className="h-10 px-6 text-white text-sm font-medium bg-gradient-to-r from-rose-600 to-rose-700 shadow-md hover:from-rose-700 hover:to-rose-800 transition-all duration-300 rounded-sm">
+          <button className="h-10 px-6 text-white text-sm font-medium bg-gradient-to-r from-rose-600 to-rose-700 shadow-md hover:from-rose-700 hover:to-rose-800 transition-all duration-300 rounded-sm" onClick={handleBookAppointment}>
             Book appointment
           </button>
         </div>
@@ -110,7 +120,7 @@ export default function Navbar() {
               </span>
             </button>
           ))}
-          <button className="w-full h-10 px-6 text-white text-sm font-medium bg-gradient-to-r from-rose-600 to-rose-700 shadow-md hover:from-rose-700 hover:to-rose-800 transition-all duration-300 rounded-sm">
+          <button className="w-full h-10 px-6 text-white text-sm font-medium bg-gradient-to-r from-rose-600 to-rose-700 shadow-md hover:from-rose-700 hover:to-rose-800 transition-all duration-300 rounded-sm" onClick={handleBookAppointment}>
             Book appointment
           </button>
         </div>
