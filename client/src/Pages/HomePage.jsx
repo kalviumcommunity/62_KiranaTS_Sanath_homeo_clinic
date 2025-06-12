@@ -5,7 +5,7 @@ import Navbar from "../components/NavBar";
 import Carousel from "../components/Carousel";
 import TreatmentsOffered from "../components/TreatmentsOffered";
 import Branches from "../components/Branches";
-import CountUpNumber from "../components/SmallerComponents/CountUpComponent";
+import CountUpNumber from "../components/CountUpComponent";
 import Doctors from "../components/Doctors";
 
 export default function Homepage() {

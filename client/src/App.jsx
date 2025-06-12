@@ -8,6 +8,7 @@ import PatientLogin from './Pages/PatientLogin'
 import PatientSignup from './Pages/PatientSignup'
 import ProtectedRoute from './components/ProtectedRoutes'
 import PatientDashboard from './Pages/PatientDashboard'
+import ComingSoon from './components/ComingSoon'
 
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path="/treatments" element={<TreatmentsPage/>} />
         <Route path="/branches" element={<BranchesPage/>} />
         <Route path="/doctors" element={<DoctorsPage/>} />
+        <Route path='coming-soon' element={<ComingSoon/>}></Route>
         <Route path="/patients/login" element={<PatientLogin/>} />
         <Route path="/patients/signup" element={<PatientSignup/>} />
         <Route 

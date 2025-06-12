@@ -48,14 +48,18 @@ export default function Navbar() {
     }
   };
 
+  const handleRatingsClick=()=>{
+    navigate("/coming-soon");
+  }
+
   const navButtons = [
     { label: "Branches", onClick: handleBranchesClick },
     { label: "Our Doctors", onClick: handleDoctorsClick },
-    { label: "Ratings" }
+    { label: "Ratings", onClick:handleRatingsClick }
   ];
 
   return (
-    <nav className="w-full h-20 md:h-24 bg-[#FFF0BF] shadow-[0px_2px_8px_rgba(0,0,0,0.25)] relative z-50">
+    <nav className="w-full h-20 md:h-24 bg-[#FFF0BF] shadow-[0px_2px_8px_rgba(0,0,0,0.25)] RELATIVE z-50">
       <div className="container mx-auto h-full px-4 md:px-8 flex items-center justify-between">
         {/* Left side - Logo and Clinic Name */}
         <div className="flex items-center">
@@ -70,7 +74,7 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-6">
+        <div className="hidden lg:flex items-center gap-6 z-50">
           <div className="flex items-center gap-4">
             {navButtons.map((button, index) => (
               <button 
