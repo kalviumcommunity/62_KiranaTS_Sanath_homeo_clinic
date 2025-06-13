@@ -7,8 +7,8 @@ export default function DoctorsPage(){
           <Navbar/>
           <main className="container mx-auto mt-10 px-4">
             <div className="space-x-2">
-              <span className="text-[#C08A69] text-4xl font-normal font-['Poppins']">Our </span>
-              <span className="text-[#C08A69] text-4xl font-semibold font-['Poppins']">Doctors</span>
+              <span className="text-[#7384B0] text-4xl font-normal font-['Poppins']">Our </span>
+              <span className="text-[#7384B0] text-4xl font-semibold font-['Poppins']">Doctors</span>
             </div>
             <Doctors/>
           </main>

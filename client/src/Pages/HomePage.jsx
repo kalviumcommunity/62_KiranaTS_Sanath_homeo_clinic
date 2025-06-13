@@ -5,8 +5,9 @@ import Navbar from "../components/NavBar";
 import Carousel from "../components/Carousel";
 import TreatmentsOffered from "../components/TreatmentsOffered";
 import Branches from "../components/Branches";
-import CountUpNumber from "../components/SmallerComponents/CountUpComponent";
+import CountUpNumber from "../components/CountUpComponent";
 import Doctors from "../components/Doctors";
+import Footer from "../components/Footer";
 
 export default function Homepage() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ useEffect(() => {
   }
 }, [location]);
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#F2F2F2]">
       <Navbar />
 
       {/* Hero / Carousel Section */}
@@ -55,7 +56,7 @@ useEffect(() => {
 
         {/* Desktop View */}
         <div className="hidden sm:block">
-          <div className="mb-6">
+          <div className="mb-10">
             <h2 className="text-[#C08A69] text-4xl font-['Poppins'] font-semibold">
               Treatments <span className="font-normal">offered</span>
             </h2>
@@ -77,7 +78,7 @@ useEffect(() => {
 
         {/* Desktop View */}
         <div className="hidden sm:block" id="branches">
-          <div className="mb-6">
+          <div className="mb-10">
             <h2 className="text-[#429DAB] text-4xl font-['Poppins'] font-normal">
               Our <span className="font-semibold">Branches</span>
             </h2>
@@ -87,16 +88,18 @@ useEffect(() => {
         </div>
       </section>
 
-      <section ref={aboutRef}className="px-4 py-12 max-w-4xl mx-auto">
-          <div className="mb-10">
+      <section ref={aboutRef}className="px-4 py-12 mx-auto">
+          <div className="w-full">
+            <div className="mb-10 max-w-4xl mx-auto">
               <h2 className="text-4xl font-semibold text-[#2C5E3E] font-['Poppins'] mb-4">
                   <span className="font-semibold">About</span>
                   <span className="font-light"> Us</span>
               </h2>
+              </div>
               <div className="w-20 h-1 bg-[#74A280]"></div>
           </div>
 
-          <div className="space-y-6 text-[#333333] leading-relaxed">
+          <div className="space-y-6 text-[#333333] leading-relaxed max-w-4xl mx-auto">
               <p className="text-lg">
                   Sanath Homeopathy Clinics—with locations in Horamavu, Hennur, and Kammanahalli—are 
                   <span className="font-medium"> centers of excellence in classical and predictive homeopathy</span>. 
@@ -156,7 +159,7 @@ useEffect(() => {
 
         {/* Desktop View */}
         <div className="hidden sm:block" id="doctors">
-          <div className="mb-6">
+          <div className="mb-10">
             <h2 className="text-[#7384B0] text-4xl font-['Poppins'] font-normal">
               Our <span className="font-semibold">Doctors</span>
             </h2>
@@ -165,6 +168,7 @@ useEffect(() => {
           <Doctors/>
         </div>
       </section>
+      <Footer/>
     </div>
   );
 }
