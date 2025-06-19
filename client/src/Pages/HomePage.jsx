@@ -40,12 +40,12 @@ useEffect(() => {
       <Navbar />
 
       {/* Hero / Carousel Section */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto">
         <Carousel />
       </main>
 
       {/* Treatments Section */}
-      <section className="px-4">
+      <section className="px-4 py-4 md:py-8">
         {/* Mobile Button */}
         <button
           onClick={() => navigate("/treatments")}
