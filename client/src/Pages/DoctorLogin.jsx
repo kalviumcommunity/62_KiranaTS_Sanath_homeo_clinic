@@ -15,7 +15,7 @@ export default function DoctorLogin() {
     try {
       // eslint-disable-next-line no-unused-vars
       const res = await axios.post(
-        "http://localhost:5000/api/doctors/login",
+        `${import.meta.env.VITE_API_BASE_URL}/api/doctors/login`,
         { email, password },
         { withCredentials: true }
       );

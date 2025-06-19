@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from '../utils/api';
+import axios from "axios";
 
 export default function Branches() {
   const [branches, setBranches] = useState([]);
@@ -12,7 +12,7 @@ export default function Branches() {
     const fetchBranches = async () => {
       try {
         console.log("Fetching doctors from /api/doctors...");
-        const response = await api.get('/api/doctors');      
+        const response = await axios.get(`/api/doctors`);      
         console.log("Response received:", response);
 
         const data = response.data.doctors;

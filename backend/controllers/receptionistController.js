@@ -24,7 +24,7 @@ const login = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '6d' }
         );
-        res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict' });
+        res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'None' });
           
 
         res.status(200).json({

@@ -8,7 +8,7 @@ export default function RoleProtectedRoute({ children, allowedRoles = [] }) {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/auth/check", {
+      .get(`${import.meta.env.VITE_API_BASE_URL}/api/auth/check`, {
         withCredentials: true,
       })
       .then((res) => {

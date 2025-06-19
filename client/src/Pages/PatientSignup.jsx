@@ -23,7 +23,7 @@ export default function PatientSignup() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/doctors")
+    axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/doctors`)
       .then((res) => {
         setDoctors(res.data.doctors);
         const uniqueBranches = [...new Set(
@@ -59,7 +59,7 @@ export default function PatientSignup() {
       formData.append("doctorId", form.doctorId);
       formData.append("picture", form.picture);
 
-      await axios.post("http://localhost:5000/api/patients/signup", formData, {
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/patients/signup`, formData, {
         withCredentials: true,
         headers: {
           "Content-Type": "multipart/form-data",
