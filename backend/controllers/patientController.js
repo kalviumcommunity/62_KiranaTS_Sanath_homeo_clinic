@@ -66,12 +66,12 @@ const login = async (req, res) => {
 
     // Find all patients with the same phone number
     const patients = await Patient.find({
-      phone,
+      phone: phone,
       name: { $regex: `^${name}$`, $options: 'i' },
     });
 
     if (patients.length === 0) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid , patients not found' });
     }
 
     const inputDOB = new Date(dob);

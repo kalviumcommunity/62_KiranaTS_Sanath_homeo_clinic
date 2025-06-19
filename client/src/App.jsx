@@ -6,7 +6,6 @@ import BranchesPage from './Pages/BranchesPage'
 import DoctorsPage from './Pages/DoctorsPage'
 import PatientLogin from './Pages/PatientLogin'
 import PatientSignup from './Pages/PatientSignup'
-import ProtectedRoute from './components/ProtectedRoutes'
 import PatientDashboard from './Pages/PatientDashboard'
 import ComingSoon from './components/ComingSoon'
 import SecureAccess from './Pages/SecureAccess';
@@ -15,6 +14,7 @@ import DoctorDashboard from './Pages/DoctorDashboard'
 import ReceptionistLogin from './Pages/ReceptionistLogin'
 import ReceptionistDashboard from './Pages/ReceptionistDashboard'
 import RoleProtectedRoute from './components/RoleProtectedRoute';
+import WeeklyAvailability from './components/doctor/WeeklyAvailability'
 
 
 
@@ -51,7 +51,9 @@ function App() {
               <DoctorDashboard />
             </RoleProtectedRoute>
           }
-        />
+        >
+          <Route path="availability" element={<WeeklyAvailability/>} />
+        </Route>
         <Route
           path="/dashboard-receptionist"
           element={

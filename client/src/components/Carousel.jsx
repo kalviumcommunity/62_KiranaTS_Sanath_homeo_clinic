@@ -23,7 +23,7 @@ export default function Carousel() {
 
     return (
         <div 
-            className="relative w-full h-[300px] sm:h-[400px] md:h-[600px] mx-auto bg-gray-50 overflow-hidden"
+            className="relative w-full h-[300px] sm:h-[400px] md:h-[700px] mx-auto bg-gray-50 overflow-hidden"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
