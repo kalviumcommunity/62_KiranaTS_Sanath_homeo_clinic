@@ -9,20 +9,17 @@ const appointmentRoutes=require('./routes/appointmentRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoute');
 const scheduleRouter=require('./routes/scheduleRoutes');
 const authRoutes=require('./routes/authRoutes')
+const cookieParser = require('cookie-parser');
 
 dotenv.config();
 
 const app=express();
+app.use(cookieParser());
 app.use(express.json());
 app.use(cors({
   origin: "http://localhost:5173",
   credentials: true
 }));
-
-
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
-
 
 app.use('/api/patients', patientRoutes);
 app.use('/api/doctors', doctorRoutes);

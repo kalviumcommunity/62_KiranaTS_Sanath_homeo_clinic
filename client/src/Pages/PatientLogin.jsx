@@ -26,7 +26,7 @@ export default function PatientLogin() {
 
     try {
       await axios.post(
-        "http://localhost:5000/api/patients/login",
+        `${import.meta.env.VITE_API_BASE_URL}/api/patients/login`,
         { name, phone, dob },
         { withCredentials: true }
       );

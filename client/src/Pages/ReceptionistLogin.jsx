@@ -16,7 +16,7 @@ export default function ReceptionistLogin() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/receptionists/login",
+        `${import.meta.env.VITE_API_BASE_URL}/api/receptionists/login`,
         { email, password },
         { withCredentials: true }
       );
