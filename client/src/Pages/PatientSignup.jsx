@@ -214,7 +214,7 @@ export default function PatientSignup() {
                     .filter(doc => doc.availability?.some(avail => avail.branch === selectedBranch))
                     .map(doc => (
                       <option key={doc._id} value={doc._id}>
-                        {doc.name} ({doc.specialization})
+                        {doc.name}
                       </option>
                     ))}
                 </select>

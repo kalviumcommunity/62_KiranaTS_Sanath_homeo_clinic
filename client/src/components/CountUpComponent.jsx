@@ -18,7 +18,7 @@ export default function CountUpNumber({ end, duration = 3000, shouldStart }) {
       if (progress < 1) {
         requestAnimationFrame(step);
       } else {
-        setCount(end); // Ensure it ends exactly on end
+        setCount(end);
       }
     };
 

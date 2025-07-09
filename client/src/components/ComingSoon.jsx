@@ -13,7 +13,8 @@ function ComingSoon() {
         <Lottie animationData={comingSoonAnimation} loop={true} />
       </div>
       <h1 className="text-3xl sm:text-4xl font-semibold text-gray-800 mb-2">Coming Soon</h1>
-      <p className="text-gray-600">Please wait for more updates</p>
+      <p className="text-gray-600">Please contact us for more updates</p>
+      <p className="textr-gray-400">Horamavu-</p>
     </div>
     </div>
   );

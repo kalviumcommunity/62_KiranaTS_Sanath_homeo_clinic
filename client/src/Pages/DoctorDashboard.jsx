@@ -1,5 +1,5 @@
 // pages/DoctorDashboard.jsx
-import Navbar from "../components/doctor/NavBar";
+import Navbar from "../components/doctor/Navbar";
 import Sidebar from "../components/doctor/Sidebar";
 import { Outlet } from "react-router-dom";
 
