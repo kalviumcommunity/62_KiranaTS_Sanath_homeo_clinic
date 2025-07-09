@@ -15,7 +15,7 @@ export default function SecureAccess() {
         setVerified(true);
         setError("");
       } else {
-        setError("Invalid access code. Try 'SECRET2025'");
+        setError("Invalid access code.");
       }
       setIsLoading(false);
     }, 800);

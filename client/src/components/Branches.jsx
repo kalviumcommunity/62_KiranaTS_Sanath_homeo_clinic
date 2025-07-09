@@ -12,7 +12,7 @@ export default function Branches() {
     const fetchBranches = async () => {
       try {
         console.log("Fetching doctors from /api/doctors...");
-        const response = await axios.get(`/api/doctors`);      
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/doctors`);      
         console.log("Response received:", response);
 
         const data = response.data.doctors;
