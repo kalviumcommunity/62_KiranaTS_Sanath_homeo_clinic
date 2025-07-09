@@ -14,7 +14,6 @@ import DoctorDashboard from './Pages/DoctorDashboard'
 import ReceptionistLogin from './Pages/ReceptionistLogin'
 import ReceptionistDashboard from './Pages/ReceptionistDashboard'
 import RoleProtectedRoute from './components/RoleProtectedRoute';
-import WeeklyAvailability from './components/doctor/WeeklyAvailability'
 
 
 
@@ -52,7 +51,6 @@ function App() {
             </RoleProtectedRoute>
           }
         >
-          <Route path="availability" element={<WeeklyAvailability/>} />
         </Route>
         <Route
           path="/dashboard-receptionist"
