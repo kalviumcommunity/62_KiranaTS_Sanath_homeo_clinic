@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/NavBar";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import GoogleLoginButton from "../components/GoogleLoginButton";
 
 export default function PatientSignup() {
   const [form, setForm] = useState({
@@ -19,6 +20,7 @@ export default function PatientSignup() {
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
 
   const navigate = useNavigate();
 
@@ -36,6 +38,13 @@ export default function PatientSignup() {
       .catch((err) => console.error("Doctor fetch error:", err));
   }, []);
 
+  const steps = [
+    { title: "Personal", fields: ["name", "dob", "gender"] },
+    { title: "Contact", fields: ["email", "phone"] },
+    { title: "Medical", fields: ["branch", "doctorId"] },
+    { title: "Complete", fields: [] }
+  ];
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -44,227 +53,464 @@ export default function PatientSignup() {
     setForm((prev) => ({ ...prev, picture: e.target.files[0] }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setMessage("");
-
-    try {
-      const formData = new FormData();
-      formData.append("name", form.name);
-      formData.append("phone", form.phone);
-      formData.append("dob", form.dob ? form.dob.toISOString().split("T")[0] : "");
-      formData.append("gender", form.gender);
-      formData.append("email", form.email);
-      formData.append("doctorId", form.doctorId);
-      formData.append("picture", form.picture);
-
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/patients/signup`, formData, {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      setMessage("Registration successful. Redirecting...");
-      setTimeout(() => navigate("/patient/dashboard"), 1500);
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Registration failed");
-    } finally {
-      setIsSubmitting(false);
+  const nextStep = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center">
-      <Navbar />
-      <div className="max-w-md w-full pt-8 pb-16">
-        <div className="bg-white p-8 rounded-lg shadow-md border border-[#D9D9D9]">
-          <div className="text-center mb-8">
-            <div className="text-blue-600 text-2xl">📝</div>
-            <h2 className="mt-4 text-3xl font-bold text-[#000000]">Create Patient Account</h2>
-          </div>
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
+  const isStepValid = () => {
+    // eslint-disable-next-line no-unused-vars
+    const currentFields = steps[currentStep].fields;
+    
+    if (currentStep === 0) {
+      return form.name && form.dob && form.gender;
+    } else if (currentStep === 1) {
+      return form.email && form.phone;
+    } else if (currentStep === 2) {
+      return selectedBranch && form.doctorId;
+    }
+    return true;
+  };
+
+  const handleManualSubmit = async (e) => {
+  e.preventDefault();
+  
+  // Ensure we're on the final step and form is complete
+  if (currentStep !== steps.length - 1 || !isFormComplete) {
+    setMessage("Please complete all steps before submitting");
+    return;
+  }
+  
+  setIsSubmitting(true);
+  setMessage("");
+
+  try {
+    const formData = new FormData();
+    formData.append("name", form.name.trim());
+    formData.append("phone", form.phone.trim());
+    formData.append("dob", form.dob ? form.dob.toISOString().split("T")[0] : "");
+    formData.append("gender", form.gender);
+    formData.append("email", form.email.trim().toLowerCase());
+    formData.append("doctorId", form.doctorId);
+    
+    if (form.picture) {
+      formData.append("picture", form.picture);
+    }
+
+    console.log("Submitting form data:", Object.fromEntries(formData)); // Debug log
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/api/patients/signup`, 
+      formData, 
+      {
+        withCredentials: true,
+        headers: { 
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    console.log("Server response:", response.data); // Debug log
+
+    if (response.data.success) {
+      setMessage("Registration successful! Redirecting to login...");
+      setTimeout(() => navigate("/patients/login"), 2000);
+    } else {
+      setMessage(response.data.message || "Registration failed");
+    }
+  } catch (err) {
+    console.error("Registration error:", err);
+    setMessage(
+      err.response?.data?.message || 
+      err.response?.data?.error || 
+      "Registration failed. Please try again."
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+const handleGoogleSuccess = async (response) => {
+  setIsSubmitting(true);
+  setMessage("Processing Google registration...");
+  
+  try {
+    // The actual API call happens in GoogleLoginButton
+    // This just handles the success response
+    console.log('Google registration successful:', response);
+    
+    setMessage("Google registration successful! Redirecting...");
+    setTimeout(() => navigate("/patient/dashboard"), 2000);
+  } catch (err) {
+    console.error('Google success handler error:', err);
+    setMessage(err.response?.data?.message || "Google registration completed with issues");
+    setIsSubmitting(false);
+  }
+};
+
+const isFormComplete = () => {
+  return (
+    form.name?.trim() &&
+    form.phone?.trim() &&
+    form.dob &&
+    form.gender &&
+    form.email?.trim() &&
+    form.doctorId &&
+    selectedBranch
+  );
+};
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+      <Navbar />
+      
+      <div className="max-w-md mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <span className="text-2xl text-white">🏥</span>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">
+            Create Account
+          </h1>
+          <p className="text-slate-500 text-sm">Join us in a few simple steps</p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-2">
+            {steps.map((step, index) => (
+              <React.Fragment key={index}>
+                <div className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
+                    index === currentStep
+                      ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                      : index < currentStep
+                      ? "bg-green-500 text-white"
+                      : "bg-slate-200 text-slate-500"
+                  }`}>
+                    {index < currentStep ? "✓" : index + 1}
+                  </div>
+                  <span className={`text-xs mt-1 hidden sm:block ${
+                    index === currentStep ? "text-blue-600 font-medium" : "text-slate-500"
+                  }`}>
+                    {step.title}
+                  </span>
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={`flex-1 h-1 mx-2 rounded-full transition-all ${
+                    index < currentStep ? "bg-green-500" : "bg-slate-200"
+                  }`} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
           {message && (
-            <div className={`mb-6 p-4 rounded-lg border ${message.includes("successful") ? "bg-green-50 text-green-800 border-green-200" : "bg-red-50 text-red-800 border-red-200"}`}>
-              <p>{message}</p>
+            <div className={`mb-6 p-4 rounded-xl border ${
+              message.includes("successful") 
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                : "bg-rose-50 text-rose-700 border-rose-200"
+            }`}>
+              <div className="flex items-center gap-3">
+                {message.includes("successful") ? (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                )}
+                <p className="font-medium text-sm">{message}</p>
+              </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name */}
-            <div>
-              <label className="block text-sm font-medium text-[#000000] mb-2">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                required
-                className="block w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg shadow-sm text-[#000000] placeholder-[#A7A7A7] focus:ring-2 focus:ring-[#429DAB] focus:border-[#429DAB]"
-                placeholder="John Doe"
-              />
-            </div>
+          <form onSubmit={handleManualSubmit}>
+            {/* Step 1: Personal Information */}
+            {currentStep === 0 && (
+              <div className="space-y-4 animate-fadeIn">
+                <h2 className="text-lg font-semibold text-slate-800 mb-2">Personal Information</h2>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Full Name *
+                  </label>
+                  <input 
+                    type="text" 
+                    name="name" 
+                    value={form.name} 
+                    onChange={handleChange}
+                    placeholder="Enter your full name"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
+                    required
+                  />
+                </div>
 
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-medium text-[#000000] mb-2">
-                Phone Number <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center text-[#89A0A4] sm:text-sm">+1</div>
-                <input
-                  type="text"
-                  name="phone"
-                  value={form.phone}
-                  onChange={handleChange}
-                  required
-                  placeholder="Enter 10 digit phone number"
-                  pattern="[0-9]{10}"
-                  className="block w-full pl-10 pr-4 py-3 bg-white border border-[#D9D9D9] rounded-lg shadow-sm text-[#000000] placeholder-[#A7A7A7] focus:ring-2 focus:ring-[#429DAB] focus:border-[#429DAB]"
-                />
-              </div>
-            </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Date of Birth *
+                    </label>
+                    <DatePicker 
+                      selected={form.dob} 
+                      onChange={(date) => setForm({ ...form, dob: date })} 
+                      maxDate={new Date()}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="DD/MM/YYYY"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
+                    />
+                  </div>
 
-            {/* Date of Birth */}
-            <div>
-              <label className="block text-sm font-medium text-[#000000] mb-2">
-                Date of Birth <span className="text-red-500">*</span>
-              </label>
-              <DatePicker
-                selected={form.dob}
-                onChange={(date) => setForm({ ...form, dob: date })}
-                maxDate={new Date()}
-                placeholderText="Select date"
-                dateFormat="yyyy-MM-dd"
-                className="block w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg shadow-sm text-[#000000] placeholder-[#A7A7A7] focus:ring-2 focus:ring-[#429DAB] focus:border-[#429DAB]"
-              />
-            </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Gender *
+                    </label>
+                    <select 
+                      name="gender" 
+                      value={form.gender} 
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
+                      required
+                    >
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Others">Others</option>
+                    </select>
+                  </div>
+                </div>
 
-            {/* Gender */}
-            <div>
-              <label className="block text-sm font-medium text-[#000000] mb-2">
-                Gender <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="gender"
-                value={form.gender}
-                onChange={handleChange}
-                required
-                className="block w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg shadow-sm text-[#000000] focus:ring-2 focus:ring-[#429DAB] focus:border-[#429DAB]"
-              >
-                <option value="">Select</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Others">Others</option>
-              </select>
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-[#000000] mb-2">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                required
-                placeholder="example@email.com"
-                className="block w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg shadow-sm text-[#000000] placeholder-[#A7A7A7] focus:ring-2 focus:ring-[#429DAB] focus:border-[#429DAB]"
-              />
-            </div>
-
-            {/* Branch */}
-            <div>
-              <label className="block text-sm font-medium text-[#000000] mb-2">
-                Branch <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                required
-                className="block w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg shadow-sm text-[#000000] focus:ring-2 focus:ring-[#429DAB] focus:border-[#429DAB]"
-              >
-                <option value="">Select</option>
-                {branches.map(branch => (
-                  <option key={branch} value={branch}>{branch}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Doctor */}
-            {selectedBranch && (
-              <div>
-                <label className="block text-sm font-medium text-[#000000] mb-2">
-                  Doctor <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="doctorId"
-                  value={form.doctorId}
-                  onChange={handleChange}
-                  required
-                  className="block w-full px-4 py-3 bg-white border border-[#D9D9D9] rounded-lg shadow-sm text-[#000000] focus:ring-2 focus:ring-[#429DAB] focus:border-[#429DAB]"
-                >
-                  <option value="">Select</option>
-                  {doctors
-                    .filter(doc => doc.availability?.some(avail => avail.branch === selectedBranch))
-                    .map(doc => (
-                      <option key={doc._id} value={doc._id}>
-                        {doc.name}
-                      </option>
-                    ))}
-                </select>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Profile Picture
+                  </label>
+                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:border-blue-300 transition-colors cursor-pointer">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleFileChange}
+                      className="hidden" 
+                      id="file-upload"
+                    />
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      <svg className="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm text-slate-600">
+                        {form.picture ? form.picture.name : "Click to upload photo"}
+                      </p>
+                    </label>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Profile Picture */}
-            <div>
-              <label className="block text-sm font-medium text-[#000000] mb-2">Profile Picture</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="w-full"
-              />
-              {form.picture && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Selected: {form.picture.name}
+            {/* Step 2: Contact Information */}
+            {currentStep === 1 && (
+              <div className="space-y-4 animate-fadeIn">
+                <h2 className="text-lg font-semibold text-slate-800 mb-2">Contact Information</h2>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Email Address *
+                  </label>
+                  <input 
+                    type="email" 
+                    name="email" 
+                    value={form.email} 
+                    onChange={handleChange}
+                    placeholder="your@email.com"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Phone Number *
+                  </label>
+                  <input 
+                    type="tel" 
+                    name="phone" 
+                    value={form.phone} 
+                    onChange={handleChange}
+                    placeholder="1234567890"
+                    pattern="[0-9]{10}"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Medical Preferences */}
+            {currentStep === 2 && (
+              <div className="space-y-4 animate-fadeIn">
+                <h2 className="text-lg font-semibold text-slate-800 mb-2">Medical Preferences</h2>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Preferred Branch *
+                  </label>
+                  <select 
+                    value={selectedBranch} 
+                    onChange={(e) => setSelectedBranch(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
+                    required
+                  >
+                    <option value="">Select branch</option>
+                    {branches.map(branch => <option key={branch} value={branch}>{branch}</option>)}
+                  </select>
+                </div>
+
+                {selectedBranch && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Preferred Doctor *
+                    </label>
+                    <select 
+                      name="doctorId" 
+                      value={form.doctorId} 
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
+                      required
+                    >
+                      <option value="">Select doctor</option>
+                      {doctors.filter(doc => doc.availability?.some(avail => avail.branch === selectedBranch))
+                        .map(doc => <option key={doc._id} value={doc._id}>{doc.name}</option>)}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 4: Complete */}
+            {currentStep === 3 && (
+              <div className="text-center animate-fadeIn">
+                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-slate-800 mb-2">Ready to Complete!</h2>
+                <p className="text-slate-600 mb-6">
+                  Review your information and create your account
                 </p>
+                
+                <div className="bg-slate-50 rounded-xl p-4 text-left mb-6">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Name:</span>
+                      <span className="font-medium">{form.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Email:</span>
+                      <span className="font-medium">{form.email}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Phone:</span>
+                      <span className="font-medium">{form.phone}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Google Signup */}
+                {/* In the Complete step */}
+                {/* In Step 4: Complete */}
+<div className="mb-4">
+  <GoogleLoginButton 
+    formData={{
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      dob: form.dob,
+      gender: form.gender,
+      doctorId: form.doctorId
+    }}
+    onSuccess={handleGoogleSuccess}
+  />
+  {!isFormComplete() && (
+    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl mt-2">
+      <p className="text-amber-700 text-sm">Complete all steps to enable Google signup</p>
+    </div>
+  )}
+</div>
+              </div>
+            )}
+
+            {/* Navigation Buttons */}
+            <div className={`flex ${currentStep === 0 ? 'justify-end' : 'justify-between'} mt-6`}>
+              {currentStep > 0 && (
+                <button
+                  type="button"
+                  onClick={prevStep}
+                  className="px-6 py-3 text-slate-600 hover:text-slate-800 font-medium transition-colors"
+                >
+                  Back
+                </button>
               )}
-            </div>
-
-            {/* Submit Button */}
-            <div>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white ${
-                  isSubmitting ? "bg-[#C08A69]" : "bg-[#429DAB] hover:bg-[#3a8c99]"
-                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#429DAB] transition-all duration-200`}
-              >
-                {isSubmitting ? "Registering..." : "Register Account"}
-              </button>
-            </div>
-
-            <div className="text-center text-sm space-y-3">
-              <p className="text-[#89A0A4]">
-                Already registered?{" "}
-                <a href="/patients/login" className="font-medium text-[#429DAB] hover:text-[#3a8c99] hover:underline">
-                  Sign In
-                </a>
-              </p>
+              
+              {currentStep < steps.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  disabled={!isStepValid()}
+                  className="px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+                >
+                  Continue
+                </button>
+              ) : (
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !isFormComplete()}
+                      className="px-6 py-3 bg-green-500 hover:bg-green-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+                    >
+                      {isSubmitting ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Creating Account...
+                        </div>
+                      ) : (
+                        "Create Account"
+                      )}
+                    </button>
+              )}
             </div>
           </form>
         </div>
 
-        <div className="mt-8 text-center">
-          <p className="text-xs text-[#89A0A4]">🔒Your data is securely encrypted</p>
+        {/* Footer */}
+        <div className="text-center mt-6">
+          <p className="text-slate-600 text-sm">
+            Already have an account?{" "}
+            <a href="/patients/login" className="font-semibold text-blue-500 hover:text-blue-600 transition-colors">
+              Sign in
+            </a>
+          </p>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
