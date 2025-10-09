@@ -29,7 +29,8 @@ const patientSchema= new mongoose.Schema({
     picture: {
         type: String,
         required: true, 
-    }
+    },
+    googleId: { type: String, unique: true, sparse: true },
 }, {timestamps: true});
 
 
