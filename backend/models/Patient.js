@@ -31,6 +31,12 @@ const patientSchema= new mongoose.Schema({
         required: true, 
     },
     googleId: { type: String, unique: true, sparse: true },
+    relationship_type: {
+        type: String,
+        enum: ['self', 'parent', 'child', 'sibling', 'spouse', 'grandparent', 'grandchild', 'other'],
+        default: 'self'
+    },
+    family_code: { type: String, default: null }
 }, {timestamps: true});
 
 
