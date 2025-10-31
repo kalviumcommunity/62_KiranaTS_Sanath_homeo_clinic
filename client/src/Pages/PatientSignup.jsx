@@ -21,6 +21,10 @@ export default function PatientSignup() {
   const [selectedBranch, setSelectedBranch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [activeAuthMethod, setActiveAuthMethod] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+  const [familyCode, setFamilyCode] = useState(null);
+
 
   const navigate = useNavigate();
 
@@ -79,93 +83,105 @@ export default function PatientSignup() {
     return true;
   };
 
+  const isFormComplete = () => {
+    return (
+      form.name?.trim() &&
+      form.phone?.trim() &&
+      form.dob &&
+      form.gender &&
+      form.email?.trim() &&
+      form.doctorId &&
+      selectedBranch
+    );
+  };
+
   const handleManualSubmit = async (e) => {
-  e.preventDefault();
-  
-  // Ensure we're on the final step and form is complete
-  if (currentStep !== steps.length - 1 || !isFormComplete) {
-    setMessage("Please complete all steps before submitting");
-    return;
-  }
-  
-  setIsSubmitting(true);
-  setMessage("");
-
-  try {
-    const formData = new FormData();
-    formData.append("name", form.name.trim());
-    formData.append("phone", form.phone.trim());
-    formData.append("dob", form.dob ? form.dob.toISOString().split("T")[0] : "");
-    formData.append("gender", form.gender);
-    formData.append("email", form.email.trim().toLowerCase());
-    formData.append("doctorId", form.doctorId);
+    e.preventDefault();
     
-    if (form.picture) {
-      formData.append("picture", form.picture);
+    if (currentStep !== steps.length - 1 || !isFormComplete()) {
+      setMessage("Please complete all steps before submitting");
+      return;
     }
+    
+    setIsSubmitting(true);
+    setActiveAuthMethod('manual');
+    setMessage("");
 
-    console.log("Submitting form data:", Object.fromEntries(formData)); // Debug log
-
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}/api/patients/signup`, 
-      formData, 
-      {
-        withCredentials: true,
-        headers: { 
-          "Content-Type": "multipart/form-data",
-        },
+    try {
+      const formData = new FormData();
+      formData.append("name", form.name.trim());
+      formData.append("phone", form.phone.trim());
+      formData.append("dob", form.dob ? form.dob.toISOString().split("T")[0] : "");
+      formData.append("gender", form.gender);
+      formData.append("email", form.email.trim().toLowerCase());
+      formData.append("doctorId", form.doctorId);
+      
+      if (form.picture) {
+        formData.append("picture", form.picture);
       }
-    );
 
-    console.log("Server response:", response.data); // Debug log
+      console.log("Submitting manual signup:", Object.fromEntries(formData));
 
-    if (response.data.success) {
-      setMessage("Registration successful! Redirecting to login...");
-      setTimeout(() => navigate("/patients/login"), 2000);
-    } else {
-      setMessage(response.data.message || "Registration failed");
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/patients/signup`, 
+        formData, 
+        {
+          withCredentials: true,
+          headers: { 
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("Manual signup response:", response.data);
+
+      if (response.data.message === "Patient registered successfully") {
+        setMessage("Registration successful! Redirecting...");
+        setTimeout(() => navigate("/patient/dashboard"), 2000);
+      } else {
+        setMessage(response.data.message || "Registration failed");
+      }
+    } catch (err) {
+      console.error("Manual registration error:", err);
+      setMessage(
+        err.response?.data?.message || 
+        err.response?.data?.error || 
+        "Registration failed. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+      setActiveAuthMethod(null);
     }
-  } catch (err) {
-    console.error("Registration error:", err);
-    setMessage(
-      err.response?.data?.message || 
-      err.response?.data?.error || 
-      "Registration failed. Please try again."
-    );
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
-const handleGoogleSuccess = async (response) => {
-  setIsSubmitting(true);
-  setMessage("Processing Google registration...");
-  
-  try {
-    // The actual API call happens in GoogleLoginButton
-    // This just handles the success response
-    console.log('Google registration successful:', response);
-    
+  const handleGoogleSuccess = async (response) => {
+    setIsSubmitting(true);
+    setActiveAuthMethod('google');
     setMessage("Google registration successful! Redirecting...");
-    setTimeout(() => navigate("/patient/dashboard"), 2000);
-  } catch (err) {
-    console.error('Google success handler error:', err);
-    setMessage(err.response?.data?.message || "Google registration completed with issues");
-    setIsSubmitting(false);
-  }
-};
 
-const isFormComplete = () => {
-  return (
-    form.name?.trim() &&
-    form.phone?.trim() &&
-    form.dob &&
-    form.gender &&
-    form.email?.trim() &&
-    form.doctorId &&
-    selectedBranch
-  );
-};
+      if (response?.patient?.family_code) {
+        setFamilyCode(response.patient.family_code);
+      }
+
+    
+    try {
+      // The actual API call happens in GoogleLoginButton
+      console.log('Google registration successful:', response);
+      
+      setTimeout(() => navigate("/patient/dashboard"), 2000);
+    } catch (err) {
+      console.error('Google success handler error:', err);
+      setMessage(err.response?.data?.message || "Google registration completed with issues");
+      setIsSubmitting(false);
+      setActiveAuthMethod(null);
+    }
+  };
+
+  const handleGoogleError = (error) => {
+    console.error('Google auth error:', error);
+    setMessage("Google authentication failed. Please try again.");
+    setActiveAuthMethod(null);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
@@ -406,10 +422,12 @@ const isFormComplete = () => {
                 </div>
                 <h2 className="text-xl font-semibold text-slate-800 mb-2">Ready to Complete!</h2>
                 <p className="text-slate-600 mb-6">
-                  Review your information and create your account
+                  Choose your preferred signup method
                 </p>
                 
+                {/* Account Summary */}
                 <div className="bg-slate-50 rounded-xl p-4 text-left mb-6">
+                  <h3 className="font-medium text-slate-700 mb-3">Your Information</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-slate-500">Name:</span>
@@ -423,46 +441,77 @@ const isFormComplete = () => {
                       <span className="text-slate-500">Phone:</span>
                       <span className="font-medium">{form.phone}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Gender:</span>
+                      <span className="font-medium">{form.gender}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Google Signup */}
-                {/* In the Complete step */}
-                {/* In Step 4: Complete */}
-<div className="mb-4">
-  <GoogleLoginButton 
-    formData={{
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      dob: form.dob,
-      gender: form.gender,
-      doctorId: form.doctorId
-    }}
-    onSuccess={handleGoogleSuccess}
-  />
-  {!isFormComplete() && (
-    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl mt-2">
-      <p className="text-amber-700 text-sm">Complete all steps to enable Google signup</p>
-    </div>
-  )}
-</div>
+                {/* Signup Options */}
+                <div className="space-y-4">
+                  {/* Google Signup */}
+                  <div className={`transition-opacity ${!isFormComplete() ? 'opacity-50' : ''}`}>
+                    <GoogleLoginButton 
+                      formData={{
+                        name: form.name,
+                        email: form.email,
+                        phone: form.phone,
+                        dob: form.dob,
+                        gender: form.gender,
+                        doctorId: form.doctorId
+                      }}
+                      onSuccess={handleGoogleSuccess}
+                      onError={handleGoogleError}
+                      disabled={!isFormComplete() || isSubmitting}
+                    />
+                  </div>
+
+                  {/* Divider */}
+                  <div className="relative flex items-center py-2">
+                    <div className="flex-grow border-t border-slate-200"></div>
+                    <span className="flex-shrink mx-4 text-slate-500 text-sm">OR</span>
+                    <div className="flex-grow border-t border-slate-200"></div>
+                  </div>
+
+                  {/* Manual Signup */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !isFormComplete() || activeAuthMethod === 'google'}
+                    className="w-full px-6 py-3.5 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+                  >
+                    {isSubmitting && activeAuthMethod === 'manual' ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Creating Account...
+                      </div>
+                    ) : (
+                      "Create Account Manually"
+                    )}
+                  </button>
+                </div>
+
+                {!isFormComplete() && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl mt-4">
+                    <p className="text-amber-700 text-sm">Complete all steps to enable signup options</p>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Navigation Buttons */}
-            <div className={`flex ${currentStep === 0 ? 'justify-end' : 'justify-between'} mt-6`}>
-              {currentStep > 0 && (
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  className="px-6 py-3 text-slate-600 hover:text-slate-800 font-medium transition-colors"
-                >
-                  Back
-                </button>
-              )}
-              
-              {currentStep < steps.length - 1 ? (
+            {/* Navigation Buttons for steps 0-2 */}
+            {currentStep < 3 && (
+              <div className={`flex ${currentStep === 0 ? 'justify-end' : 'justify-between'} mt-6`}>
+                {currentStep > 0 && (
+                  <button
+                    type="button"
+                    onClick={prevStep}
+                    className="px-6 py-3 text-slate-600 hover:text-slate-800 font-medium transition-colors"
+                  >
+                    Back
+                  </button>
+                )}
+                
                 <button
                   type="button"
                   onClick={nextStep}
@@ -471,23 +520,8 @@ const isFormComplete = () => {
                 >
                   Continue
                 </button>
-              ) : (
-                    <button
-                      type="submit"
-                      disabled={isSubmitting || !isFormComplete()}
-                      className="px-6 py-3 bg-green-500 hover:bg-green-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
-                    >
-                      {isSubmitting ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Creating Account...
-                        </div>
-                      ) : (
-                        "Create Account"
-                      )}
-                    </button>
-              )}
-            </div>
+              </div>
+            )}
           </form>
         </div>
 
@@ -501,16 +535,6 @@ const isFormComplete = () => {
           </p>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }
