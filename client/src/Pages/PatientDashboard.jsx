@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import FamilyDropdown from '../components/FamilyDropdown';
 import FamilyLinkingModal from '../components/FamilyLinkingModal';
 
@@ -6,54 +7,51 @@ const PatientDashboard = () => {
   const [currentPatient, setCurrentPatient] = useState(null);
   const [familyMembers, setFamilyMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showFamilyModal, setShowFamilyModal] = useState(false); // Add this state
+  const [showFamilyModal, setShowFamilyModal] = useState(false);
 
-  // Fetch current patient and family members on component mount
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
-    fetchPatientData();
-    
-    // Listen for the custom event from FamilyDropdown
+    // Directly fetch patient data
+    axios
+      .get(`${API_BASE}/api/patients/current`, { withCredentials: true })
+      .then((response) => {
+        if (response.data.patient) {
+          setCurrentPatient(response.data.patient);
+          setFamilyMembers(response.data.familyMembers || []);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching patient data:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+
+    // Listen for showFamilyModal event
     const handleShowModal = () => setShowFamilyModal(true);
     window.addEventListener('showFamilyModal', handleShowModal);
-    
     return () => {
       window.removeEventListener('showFamilyModal', handleShowModal);
     };
-  }, []);
-
-  const fetchPatientData = async () => {
-    try {
-      // FIX: Changed from '/api/patient/current' to '/api/patients/current'
-      const response = await fetch('/api/patients/current', {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch patient data');
-      }
-      
-      const data = await response.json();
-      
-      if (data.patient) {
-        setCurrentPatient(data.patient);
-        setFamilyMembers(data.familyMembers || []);
-      }
-    } catch (error) {
-      console.error('Error fetching patient data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [API_BASE]);
 
   const handleSwitchPatient = (newPatient) => {
     setCurrentPatient(newPatient);
-    // You might want to refetch dashboard data here based on the new patient
-    // fetchDashboardData(newPatient._id);
   };
 
   const handleFamilyUpdate = () => {
-    // Refresh the family data when a new member is added
-    fetchPatientData();
+    axios
+      .get(`${API_BASE}/api/patients/current`, { withCredentials: true })
+      .then((response) => {
+        if (response.data.patient) {
+          setCurrentPatient(response.data.patient);
+          setFamilyMembers(response.data.familyMembers || []);
+        }
+      })
+      .catch((error) => {
+        console.error('Error refreshing family data:', error);
+      });
   };
 
   if (loading) {

@@ -1,39 +1,35 @@
-import React, { useState} from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 import { ChevronDownIcon, UserIcon } from '@heroicons/react/24/outline';
 
 const FamilyDropdown = ({ currentPatient, familyMembers, onSwitchPatient }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
 
-  // Filter out current patient from family members list
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
+  // Filter out current patient
   const otherFamilyMembers = familyMembers?.filter(
     member => member._id !== currentPatient?._id
   ) || [];
 
   const handleSwitch = async (patientId) => {
     if (isSwitching) return;
-    
     setIsSwitching(true);
+
     try {
-      // FIX: Changed from '/api/patient/switch-family-member' to '/api/patients/switch-patient'
-      const response = await fetch('/api/patients/switch-patient', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ patientId }),
-        credentials: 'include'
-      });
+      const response = await axios.post(
+        `${API_BASE}/api/patients/switch-patient`,
+        { patientId },
+        { withCredentials: true }
+      );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Call the parent callback to update current patient
-        onSwitchPatient(data.currentPatient);
+      if (response.status === 200) {
+        onSwitchPatient(response.data.currentPatient);
         setIsOpen(false);
       } else {
-        console.error('Failed to switch patient:', data.message);
-        alert('Failed to switch patient: ' + data.message);
+        console.error('Failed to switch patient:', response.data.message);
+        alert('Failed to switch patient: ' + response.data.message);
       }
     } catch (error) {
       console.error('Error switching patient:', error);
