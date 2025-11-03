@@ -21,6 +21,8 @@ app.use(cors({
   origin: ['http://localhost:5173', 'https://sanath-homeo-clinic.netlify.app'],
   credentials: true
 }));
+app.options('*', cors());
+
 
 app.use('/api/patients', patientRoutes);
 app.use('/api/doctors', doctorRoutes);

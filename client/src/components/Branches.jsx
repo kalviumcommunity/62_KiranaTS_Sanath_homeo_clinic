@@ -12,7 +12,7 @@ export default function Branches() {
     const fetchBranches = async () => {
       try {
         console.log("Fetching doctors from /api/doctors...");
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/doctors`);      
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/doctors`);
         console.log("Response received:", response);
 
         const data = response.data.doctors;
@@ -22,43 +22,76 @@ export default function Branches() {
           throw new Error("Invalid data format: expected array of doctors");
         }
 
-        const branchData = data.flatMap((doctor, doctorIndex) => {
-          console.log(`Processing doctor[${doctorIndex}]:`, doctor);
-
-          if (!Array.isArray(doctor.availability)) {
-            console.warn(`Doctor ${doctor.name} has no availability array.`);
+        // First, collect all branches from all doctors
+        const allBranches = data.flatMap((doctor) => {
+          if (!Array.isArray(doctor.branches)) {
+            console.warn(`Doctor ${doctor.name} has no branches array.`);
             return [];
           }
 
-          const branchesForDoctor = doctor.availability.map((slot, slotIndex) => {
-            console.log(`  Availability[${slotIndex}]:`, slot);
-            if (!slot?.branch) {
-              console.warn(`  Missing branch info in availability slot ${slotIndex} for doctor ${doctor.name}`);
-              return null;
-            }
-            const branchName = slot.branch;
-            return {
-              name: branchName,
-              doctor: doctor.name,
-              link: `/${branchName.toLowerCase().replace(/\s+/g, "")}`,
-              image: `/images/${branchName}.png`,
-            };
-          }).filter(Boolean);
+          const uniqueBranches = new Set();
 
-          console.log(`  Branches extracted for doctor ${doctor.name}:`, branchesForDoctor);
+          return doctor.branches
+            .map((branch) => {
+              // Handle both string and object branch formats
+              const branchName = typeof branch === "string" ? branch : branch?.name;
+              
+              if (!branchName) {
+                console.warn(`Missing branch name for doctor ${doctor.name}`);
+                return null;
+              }
 
-          return branchesForDoctor;
+              // Skip duplicates for the same doctor
+              if (uniqueBranches.has(branchName.toLowerCase())) {
+                return null;
+              }
+              uniqueBranches.add(branchName.toLowerCase());
+
+              return {
+                name: branchName,
+                doctor: doctor.name,
+                link: `/${branchName.toLowerCase().replace(/\s+/g, "")}`,
+                image: `/images/${branchName}.png`,
+              };
+            })
+            .filter(Boolean);
         });
 
-        console.log("All branch data collected:", branchData);
+        console.log("All branches collected:", allBranches);
 
+        // Now combine branches by name and collect all doctors
+        const branchMap = new Map();
+
+        allBranches.forEach((branch) => {
+          const existingBranch = branchMap.get(branch.name);
+          
+          if (existingBranch) {
+            // If branch already exists, add the doctor to the list
+            if (!existingBranch.doctors.includes(branch.doctor)) {
+              existingBranch.doctors.push(branch.doctor);
+            }
+          } else {
+            // If branch doesn't exist, create new entry with doctors array
+            branchMap.set(branch.name, {
+              name: branch.name,
+              doctors: [branch.doctor],
+              link: branch.link,
+              image: branch.image,
+            });
+          }
+        });
+
+        // Convert map back to array
+        const combinedBranches = Array.from(branchMap.values());
+        console.log("Combined branches with doctors:", combinedBranches);
+
+        // Sort branches according to desired order
         const desiredOrder = ["Horamavu", "Kammanahalli", "Hennur"];
-        const sortedBranches = [...branchData].sort(
+        const sortedBranches = combinedBranches.sort(
           (a, b) => desiredOrder.indexOf(a.name) - desiredOrder.indexOf(b.name)
         );
 
-        console.log("Sorted branches:", sortedBranches);
-
+        console.log("Final sorted branches:", sortedBranches);
         setBranches(sortedBranches);
       } catch (err) {
         console.error("Error fetching branch data:", err);
@@ -113,12 +146,16 @@ export default function Branches() {
 
   console.log("Rendering branches:", branches);
 
-  const handleBookAppointmentClick = (doctorName) => {
+  const handleBookAppointmentClick = (branchName, doctors) => {
     const isLoggedIn = document.cookie.includes("token");
     if (!isLoggedIn) {
       navigate("/patients/login");
+    } else if (doctors.length === 1) {
+      // If only one doctor, book directly with that doctor
+      navigate(`/book-appointment/${encodeURIComponent(doctors[0])}`);
     } else {
-      navigate(`/book-appointment/${encodeURIComponent(doctorName)}`);
+      // If multiple doctors, navigate to doctor selection
+      navigate(`/select-doctor?branch=${encodeURIComponent(branchName)}`);
     }
   };
 
@@ -151,10 +188,20 @@ export default function Branches() {
             </div>
 
             <div className="p-6">
-              {branch.doctor && (
-                <p className="text-gray-700 mb-4">
-                  <span className="font-semibold">Consultant:</span> {branch.doctor}
-                </p>
+              {branch.doctors && branch.doctors.length > 0 && (
+                <div className="text-gray-700 mb-4">
+                  <span className="font-semibold block mb-2">
+                    {branch.doctors.length > 1 ? "Consultants:" : "Consultant:"}
+                  </span>
+                  <div className="space-y-1">
+                    {branch.doctors.map((doctor, doctorIndex) => (
+                      <div key={doctorIndex} className="flex items-center text-sm">
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
+                        {doctor}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
               <div className="flex justify-between items-center mt-6">
@@ -177,7 +224,7 @@ export default function Branches() {
                 </Link>
                 <button
                   className="h-10 px-6 text-white text-sm font-medium bg-gradient-to-r from-rose-600 to-rose-700 shadow-md hover:from-rose-700 hover:to-rose-800 transition-all duration-300 rounded-sm"
-                  onClick={() => handleBookAppointmentClick(branch.doctor)}
+                  onClick={() => handleBookAppointmentClick(branch.name, branch.doctors)}
                 >
                   Book appointment
                 </button>
