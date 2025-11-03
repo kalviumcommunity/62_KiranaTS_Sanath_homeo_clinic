@@ -29,18 +29,22 @@ export default function PatientSignup() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/doctors`)
-      .then((res) => {
-        setDoctors(res.data.doctors);
-        const uniqueBranches = [...new Set(
-          res.data.doctors.flatMap(doc =>
-            doc.availability?.map(avail => avail.branch) || []
-          )
-        )];
-        setBranches(uniqueBranches);
-      })
-      .catch((err) => console.error("Doctor fetch error:", err));
-  }, []);
+  axios
+    .get(`${import.meta.env.VITE_API_BASE_URL}/api/doctors`)
+    .then((res) => {
+      console.log("Doctor data:", res.data);
+      setDoctors(res.data.doctors);
+
+      const uniqueBranches = [...new Set(
+        res.data.doctors.flatMap(doc => doc.branches || [])
+      )];
+
+      console.log("Unique branches:", uniqueBranches);
+      setBranches(uniqueBranches);
+    })
+    .catch((err) => console.error("Doctor fetch error:", err));
+}, []);
+
 
   const steps = [
     { title: "Personal", fields: ["name", "dob", "gender"] },
@@ -404,8 +408,11 @@ export default function PatientSignup() {
                       required
                     >
                       <option value="">Select doctor</option>
-                      {doctors.filter(doc => doc.availability?.some(avail => avail.branch === selectedBranch))
-                        .map(doc => <option key={doc._id} value={doc._id}>{doc.name}</option>)}
+                      {doctors
+                      .filter(doc => doc.branches?.includes(selectedBranch))
+                      .map(doc => (
+                        <option key={doc._id} value={doc._id}>{doc.name}</option>
+                      ))}
                     </select>
                   </div>
                 )}

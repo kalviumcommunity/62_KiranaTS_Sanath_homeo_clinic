@@ -1,61 +1,57 @@
-const mongoose=require('mongoose')
+const mongoose = require('mongoose');
+
 const doctorScheduleSchema = new mongoose.Schema({
-    doctorId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Doctor',
-        required: true,
-        unique: true
-    },
-    weeklyAvailability: {
-        Monday: [
-            {
-                branch: { type: String, required: true },
-                start: { type: String, required: true },
-                end: { type: String, required: true }
-            }
-        ],
-        Tuesday: [
-            {
-                branch: { type: String, required: true },
-                start: { type: String, required: true },
-                end: { type: String, required: true }
-            }
-        ],
-        Wednesday: [
-            {
-                branch: { type: String, required: true },
-                start: { type: String, required: true },
-                end: { type: String, required: true }
-            }
-        ],
-        Thursday: [
-            {
-                branch: { type: String, required: true },
-                start: { type: String, required: true },
-                end: { type: String, required: true }
-            }
-        ],
-        Friday: [
-            {
-                branch: { type: String, required: true },
-                start: { type: String, required: true },
-                end: { type: String, required: true }
-            }
-        ],
-        Saturday: [
-            {
-                branch: { type: String, required: true },
-                start: { type: String, required: true },
-                end: { type: String, required: true }
-            }
-        ]
-    },
-    holidays: [Date],
-    blockedSlots: [
+  doctorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Doctor',
+    required: true
+  },
+
+  // Weekly default availability
+  weeklyAvailability: [
+    {
+      day: {
+        type: String,
+        enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+        required: true
+      },
+      timeSlots: [
         {
-            date: { type: Date, required: true },
-            start: { type: String, required: true },
-            end: { type: String, required: true }
+          from: { type: String, required: true },
+          to: { type: String, required: true },
+
+          // 🟢 Added: which branch the slot belongs to
+          branch: { type: String, required: true }
         }
-    ]
-});
+      ]
+    }
+  ],
+
+  // Specific blocked slots (temporary exceptions)
+  blockedSlots: [
+    {
+      date: { type: Date, required: true },
+      from: { type: String, required: true },
+      to: { type: String, required: true },
+      reason: { type: String }
+    }
+  ],
+
+  // Full-day holidays or leaves
+  holidays: [
+    {
+      date: { type: Date, required: true },
+      reason: { type: String }
+    }
+  ],
+
+  // Slot duration (for generating bookable slots)
+  slotDuration: {
+    type: Number,
+    default: 30 // mins
+  }
+
+}, { timestamps: true });
+
+const DoctorSchedule = mongoose.model('DoctorSchedule', doctorScheduleSchema);
+module.exports = DoctorSchedule;

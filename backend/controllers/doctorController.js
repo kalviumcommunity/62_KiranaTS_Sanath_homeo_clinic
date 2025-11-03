@@ -44,7 +44,7 @@ const login = async (req, res) => {
 // Get All Doctors
 const getAllDoctors = async (req, res) => {
     try {
-        const doctors = await Doctor.find({}, 'name branch availability');
+        const doctors = await Doctor.find({}, 'name branches');
         res.status(200).json({ doctors });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching doctors', error: error.message });

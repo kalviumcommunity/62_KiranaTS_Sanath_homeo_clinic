@@ -1,59 +1,73 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { LayoutDashboard, Calendar, CalendarX, Clock, Users, UserCircle, LogOut, ClipboardList } from "lucide-react";
 
 export default function Sidebar() {
-  const navigate = useNavigate();
   const location = useLocation();
+  const { pathname } = location;
 
-  const menu = [
-    { name: "Dashboard", path: "/dashboard-doctor", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-    { name: "Availability", path: "/dashboard-doctor/availability", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
-    { name: "Appointments", path: "/doctor/dashboard/appointments", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
-    { name: "Recent patients", path: "/doctor/dashboard/patients", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
-  ];
-  
-  const handleLogout = () => {
-    document.cookie = "token=; Max-Age=0"; // clear token
-    navigate("/doctor/login");
+  const isActive = (path, exact = false) => {
+    if (exact) return pathname === path;
+    return pathname.startsWith(path) && pathname !== '/dashboard-doctor';
   };
 
+  const menuItems = [
+    { path: '/dashboard-doctor', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+    { path: '/dashboard-doctor/schedule', label: 'Schedule', icon: Calendar },
+    { path: '/dashboard-doctor/exceptions', label: 'Exceptions', icon: CalendarX },
+    { path: '/dashboard-doctor/available', label: 'Available Slots', icon: Clock },
+    { path: '/dashboard-doctor/appointments', label: 'Appointments', icon: ClipboardList },
+    { path: '/dashboard-doctor/patients', label: 'Patients', icon: Users },
+    { path: '/dashboard-doctor/profile', label: 'Profile', icon: UserCircle },
+  ];
+
   return (
-    <aside className="w-64 min-h-screen bg-white text-[#2C5E3E] p-6 border-r border-[#E8E8E8] relative">
-      <div className="mb-10">
-        <h2 className="text-2xl font-semibold text-[#2C5E3E]">Doctor Panel</h2>
-        <div className="w-12 h-1 bg-[#74A280] mt-2"></div>
+    <aside className="w-64 bg-white h-screen border-r border-gray-200">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-100">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center">
+            <LayoutDashboard className="text-white" size={20} />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">Control Panel</h2>
+            <p className="text-xs text-gray-500">Doctor Management</p>
+          </div>
+        </div>
       </div>
 
-      <nav>
-        <ul className="space-y-3">
-          {menu.map((item, index) => (
-            <li
-              key={index}
-              onClick={() => navigate(item.path)}
-              className={`px-4 py-3 rounded-lg cursor-pointer flex items-center transition-all duration-200
-                ${location.pathname === item.path
-                  ? 'bg-[#2C5E3E] text-white font-medium shadow-sm'
-                  : 'hover:bg-[#F2F2F2] text-[#2C5E3E]'
-                }`}
+      {/* Navigation */}
+      <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-160px)]">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.path, item.exact);
+          
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`group flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${
+                active
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-              </svg>
-              {item.name}
-            </li>
-          ))}
-        </ul>
+              <Icon size={20} className={active ? 'text-emerald-600' : 'text-gray-400 group-hover:text-gray-600'} />
+              <span className="font-medium text-sm">{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="absolute bottom-6 left-0 right-0 px-6">
-        <button 
-          onClick={handleLogout} 
-          className="w-full py-2.5 px-4 rounded-lg border border-[#E8E8E8] text-[#2C5E3E] font-medium bg-[#F2F2F2] transition-all duration-200 flex items-center justify-center"
+      {/* Logout Button */}
+      <div className="p-4 border-t border-gray-100">
+        <Link
+          to="/dashboard-doctor/logout"
+          className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-all group"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Logout
-        </button>
+          <LogOut size={20} />
+          <span className="font-medium text-sm">Logout</span>
+        </Link>
       </div>
     </aside>
   );

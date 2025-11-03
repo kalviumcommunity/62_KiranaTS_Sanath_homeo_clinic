@@ -14,6 +14,9 @@ import DoctorDashboard from './Pages/DoctorDashboard'
 import ReceptionistLogin from './Pages/ReceptionistLogin'
 import ReceptionistDashboard from './Pages/ReceptionistDashboard'
 import RoleProtectedRoute from './components/RoleProtectedRoute';
+import DoctorSchedule from './Pages/DoctorSchedule'
+import ManageExceptions from './components/doctor/ManageExceptions'
+import AvailableSlots from './components/doctor/AvailableSlots'
 
 
 
@@ -51,6 +54,9 @@ function App() {
             </RoleProtectedRoute>
           }
         >
+          <Route path="schedule" element={<DoctorSchedule />} />
+          <Route path="exceptions" element={<ManageExceptions />} />
+          <Route path="available" element={<AvailableSlots />} />
         </Route>
         <Route
           path="/dashboard-receptionist"

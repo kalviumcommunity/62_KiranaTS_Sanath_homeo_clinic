@@ -7,7 +7,8 @@ const doctorRoutes=require('./routes/doctorRoutes');
 const receptionistRoutes=require('./routes/receptionistRoutes');
 const appointmentRoutes=require('./routes/appointmentRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoute');
-const scheduleRouter=require('./routes/scheduleRoutes');
+// const scheduleRouter=require('./routes/scheduleRoutes');
+const doctorScheduleRoutes = require('./routes/doctorScheduleRoutes')
 const authRoutes=require('./routes/authRoutes')
 const cookieParser = require('cookie-parser');
 
@@ -26,7 +27,8 @@ app.use('/api/doctors', doctorRoutes);
 app.use('/api/receptionists', receptionistRoutes);
 app.use('/api/appointments', appointmentRoutes)
 app.use('/api/prescriptions', prescriptionRoutes);
-app.use('/api/schedule', scheduleRouter)
+app.use('/api/schedule', doctorScheduleRoutes);
+// app.use('/api/schedule', scheduleRouter)
 app.use('/api/auth', authRoutes)
 
 
