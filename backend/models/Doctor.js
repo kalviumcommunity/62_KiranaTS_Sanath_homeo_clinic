@@ -13,24 +13,11 @@ const doctorSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    availability: [
-        {
-            branch: {
-                type: String,
-                required: true
-            },
-            days: {
-                type: [String],
-                required: true
-            },
-            timeSlots: [
-                {
-                    from: String,
-                    to: String
-                }
-            ]
-        }
-    ]
+    branches: {
+    type: [String],
+    enum: ["Horamavu", "Hennur", "Kammanahalli"],
+    default: [],
+  },
 });
 
 const Doctor = mongoose.model('Doctor', doctorSchema, 'Doctors');

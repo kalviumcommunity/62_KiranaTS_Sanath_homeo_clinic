@@ -19,6 +19,16 @@ export default function DoctorLogin() {
         { email, password },
         { withCredentials: true }
       );
+      if (res.data.doctor) {
+        localStorage.setItem(
+          "doctor",
+          JSON.stringify({
+            _id: res.data.doctor._id,
+            name: res.data.doctor.name,
+            email: res.data.doctor.email,
+          })
+        );
+      }
 
       setMessage("Login successful!");
       navigate("/dashboard-doctor");
