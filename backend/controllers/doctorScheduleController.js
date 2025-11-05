@@ -1,6 +1,7 @@
 const DoctorSchedule = require('../models/doctorSchedule');
 const Appointment = require('../models/Appointments');
 const { isValidObjectId } = require('mongoose');
+const Doctor = require('../models/Doctor');
 
 
 
@@ -112,102 +113,98 @@ const deleteSchedule = async (req, res) => {
 
 const getAvailableSlots = async (req, res) => {
   try {
-    const { doctorId, date } = req.params; // e.g. date = '2025-11-04'
+    const { doctorId, date } = req.params;
+    const { branch } = req.query;
 
-    if (!isValidObjectId(doctorId)) return res.status(400).json({ message: 'Invalid doctorId' });
-    if (!date) return res.status(400).json({ message: 'Date required (YYYY-MM-DD)' });
+    if (!isValidObjectId(doctorId))
+      return res.status(400).json({ message: 'Invalid doctorId' });
+    if (!date) return res.status(400).json({ message: 'Date required' });
+    if (!branch)
+      return res.status(400).json({ message: 'Branch is required' });
 
-    // Normalize date consistently
-    const isoDateStr = new Date(date).toISOString().split('T')[0];
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
+    if (!doctor.branches.includes(branch))
+      return res.status(400).json({ message: `Doctor not available in ${branch}` });
 
     const schedule = await DoctorSchedule.findOne({ doctorId });
     if (!schedule) return res.status(404).json({ message: 'Schedule not found' });
 
+    const isoDate = new Date(date).toISOString().split('T')[0];
     const slotDuration = schedule.slotDuration || 30;
 
-    // ✅ 1) Proper holiday check — normalized both sides to YYYY-MM-DD
-    const isHoliday = (schedule.holidays || []).some(h => {
-      const stored = new Date(h.date).toISOString().split('T')[0];
-      return stored === isoDateStr;
-    });
+    // Check if it's a holiday
+    const isHoliday = (schedule.holidays || []).some(
+      h => new Date(h.date).toISOString().split('T')[0] === isoDate
+    );
+    if (isHoliday)
+      return res.status(200).json({ message: 'Holiday — no slots', slots: [] });
 
-    if (isHoliday) {
-      return res.status(200).json({ message: 'Holiday — no available slots', date: isoDateStr, slots: [] });
-    }
-
-    // 2) Determine weekday name
+    // Get the day name (e.g. Monday)
     const weekdayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const targetDate = new Date(date + 'T00:00:00');
     const dayName = weekdayNames[targetDate.getDay()];
 
-    // 3) Find availability for that weekday
     const dayAvailability = (schedule.weeklyAvailability || []).find(d => d.day === dayName);
-    if (!dayAvailability || !dayAvailability.timeSlots?.length) {
-      return res.status(200).json({ date: isoDateStr, slots: [] });
-    }
+    if (!dayAvailability)
+      return res.status(200).json({ slots: [] });
 
-    // 4) Prepare blocked slots for that date
-    const blockedForDate = (schedule.blockedSlots || []).filter(b => {
-      const stored = new Date(b.date).toISOString().split('T')[0];
-      return stored === isoDateStr;
-    });
+    const branchSlots = (dayAvailability.timeSlots || []).filter(
+      s => s.branch === branch
+    );
 
-    // 5) Load existing appointments
-    const dayStart = new Date(date + 'T00:00:00.000Z');
-    const dayEnd = new Date(date + 'T23:59:59.999Z');
+    if (!branchSlots.length)
+      return res.status(200).json({ message: `No slots for ${branch}`, slots: [] });
 
+    const blockedForDate = (schedule.blockedSlots || []).filter(
+      b => new Date(b.date).toISOString().split('T')[0] === isoDate
+    );
+
+    // 🟡 FIX: use correct Appointment field names (appointmentDate + appointmentTime)
     const appointments = await Appointment.find({
-      doctor: doctorId,
-      status: { $in: ['booked', 'confirmed'] },
-      start: { $gte: dayStart, $lte: dayEnd }
-    }).lean();
-
-    // Convert appointments to minute ranges
-    const apptRanges = appointments.map(a => {
-      const start = new Date(a.start);
-      const end = new Date(a.end);
-      return [start.getHours() * 60 + start.getMinutes(), end.getHours() * 60 + end.getMinutes()];
+      doctorId,
+      branch,
+      appointmentDate: {
+        $gte: new Date(date + 'T00:00:00Z'),
+        $lte: new Date(date + 'T23:59:59Z')
+      },
+      status: { $in: ['Pending', 'Confirmed'] }
     });
 
-    // Convert blocked slots to minute ranges
-    const blockedRanges = blockedForDate.map(b => [
-      timeToMinutes(b.from),
-      timeToMinutes(b.to)
-    ]);
+    const bookedTimes = appointments.map(a => a.appointmentTime);
 
-    // 6) Generate slots from availability, exclude blocked + appointments
-    const availableSlots = [];
-    for (const ts of dayAvailability.timeSlots) {
-      const rangeStart = timeToMinutes(ts.from);
-      const rangeEnd = timeToMinutes(ts.to);
+    // Generate slots
+    const slots = [];
+    for (const ts of branchSlots) {
+      const startMin = timeToMinutes(ts.from);
+      const endMin = timeToMinutes(ts.to);
 
-      for (let startMin = rangeStart; startMin + slotDuration <= rangeEnd; startMin += slotDuration) {
-        const endMin = startMin + slotDuration;
+      for (let s = startMin; s + slotDuration <= endMin; s += slotDuration) {
+        const e = s + slotDuration;
+        const from = minutesToTime(s);
+        const to = minutesToTime(e);
 
-        const blocked = blockedRanges.some(br => rangesOverlap(startMin, endMin, br[0], br[1]));
-        const conflict = apptRanges.some(ar => rangesOverlap(startMin, endMin, ar[0], ar[1]));
-        if (blocked || conflict) continue;
+        // Check booked or blocked
+        const isBooked = bookedTimes.includes(from);
+        const isBlocked = blockedForDate.some(r =>
+          rangesOverlap(s, e, timeToMinutes(r.from), timeToMinutes(r.to))
+        );
 
-        const slotStart = new Date(targetDate);
-        slotStart.setHours(0, 0, 0, 0);
-        slotStart.setMinutes(startMin);
-        const slotEnd = new Date(slotStart.getTime() + slotDuration * 60000);
-
-        availableSlots.push({
-          from: minutesToTime(startMin),
-          to: minutesToTime(endMin),
-          isoFrom: slotStart.toISOString(),
-          isoTo: slotEnd.toISOString()
+        slots.push({
+          from,
+          to,
+          booked: isBooked || isBlocked
         });
       }
     }
 
-    res.status(200).json({ date: isoDateStr, slots: availableSlots });
+    return res.status(200).json({ date: isoDate, branch, slots });
   } catch (err) {
-    console.error('Error getAvailableSlots:', err);
-    res.status(500).json({ message: 'Internal Server Error' });
+    console.error('Error in getAvailableSlots:', err);
+    return res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
 
 
 

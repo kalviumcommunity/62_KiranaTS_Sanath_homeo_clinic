@@ -17,6 +17,8 @@ import RoleProtectedRoute from './components/RoleProtectedRoute';
 import DoctorSchedule from './Pages/DoctorSchedule'
 import ManageExceptions from './components/doctor/ManageExceptions'
 import AvailableSlots from './components/doctor/AvailableSlots'
+import AvailableSlotsPatient from './components/patients/AvailableSlotsPatient'
+import MyAppointments from './components/patients/MyAppointments'
 
 
 
@@ -66,6 +68,24 @@ function App() {
             </RoleProtectedRoute>
           }
         />
+        <Route
+          path="/patient/dashboard/available-slots"
+          element={
+            <RoleProtectedRoute allowedRoles={["patient"]}>
+              <AvailableSlotsPatient />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/patient/dashboard/my-appointments"
+          element={
+            <RoleProtectedRoute allowedRoles={["patient"]}>
+              <MyAppointments />
+            </RoleProtectedRoute>
+          }
+        />
+
 
       </Routes>
     </Router>

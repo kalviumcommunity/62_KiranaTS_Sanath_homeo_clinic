@@ -292,6 +292,50 @@ const currentPatient = async (req, res) => {
   }
 };
 
+const searchPatients = async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.status(400).json({ message: "Search query is required" });
+    }
+
+    let searchCriteria = [];
+
+    // If query is all digits, search phone as number
+    if (/^\d+$/.test(query)) {
+      searchCriteria.push({ phone: Number(query) });
+    }
+
+    // Always allow searching by name and email
+    searchCriteria.push(
+      { name: { $regex: query, $options: "i" } },
+      { email: { $regex: query, $options: "i" } }
+    );
+
+    const patients = await Patient.find({ $or: searchCriteria }).select("-password");
+
+    res.status(200).json({ patients });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to search patients", error: error.message });
+  }
+};
+const getAppointmentsByPatient = async (req, res) => {
+  const patientId = req.user.id;
+  try {
+    const appointments = await Appointment.find({ patientId })
+      .populate('patientId')
+      .populate({ path: 'doctorId', select: '-password' });
+    res.status(200).json({ appointments });
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Failed to fetch patient appointments', 
+      error: error.message 
+    });
+  }
+};
 
 
-module.exports={signup, login, getPatientsForDoc, addFamilyMember, getFamilyMembers, switchFamilyMember, currentPatient};
+
+
+module.exports={signup, login, getPatientsForDoc, addFamilyMember, getFamilyMembers, switchFamilyMember, currentPatient, searchPatients, getAppointmentsByPatient};
