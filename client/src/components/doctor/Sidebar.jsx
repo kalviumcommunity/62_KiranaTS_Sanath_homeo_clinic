@@ -16,7 +16,6 @@ export default function Sidebar() {
     { path: '/dashboard-doctor/schedule', label: 'Schedule', icon: Calendar },
     { path: '/dashboard-doctor/exceptions', label: 'Exceptions', icon: CalendarX },
     { path: '/dashboard-doctor/available', label: 'Available Slots', icon: Clock },
-    { path: '/dashboard-doctor/appointments', label: 'Appointments', icon: ClipboardList },
     { path: '/dashboard-doctor/patients', label: 'Patients', icon: Users },
     { path: '/dashboard-doctor/profile', label: 'Profile', icon: UserCircle },
   ];

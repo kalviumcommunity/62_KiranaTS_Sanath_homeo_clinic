@@ -1,7 +1,7 @@
 const Appointment = require('../models/Appointments');
 const Doctor = require('../models/Doctor');
 const Prescription = require('../models/Prescription');
-
+const mongoose = require('mongoose');
 
 const createPrescription = async (req, res) => {
     const { appointmentId, medicines, instructions } = req.body;
@@ -53,4 +53,38 @@ const getPrescriptionByAppointment=async(req,res)=>{
     }
 }
 
-module.exports = { createPrescription, getPrescriptionByAppointment };
+const getPrescriptionById = async (req, res) => {
+  try {
+    const { prescriptionId } = req.params;
+    
+    console.log('Fetching prescription with ID:', prescriptionId); // Add logging
+    
+    if (!mongoose.Types.ObjectId.isValid(prescriptionId)) {
+      return res.status(400).json({ message: 'Invalid prescription ID' });
+    }
+
+    const prescription = await Prescription.findById(prescriptionId)
+      .populate('doctorId', 'name specialization')
+      .populate('patientId', 'name phone');
+
+    console.log('Found prescription:', prescription); // Add logging
+
+    if (!prescription) {
+      return res.status(404).json({ message: 'Prescription not found' });
+    }
+
+    res.status(200).json({
+      message: 'Prescription fetched successfully',
+      prescription
+    });
+  } catch (error) {
+    console.error('Error fetching prescription by ID:', error);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
+module.exports = { createPrescription, getPrescriptionByAppointment, getPrescriptionById };

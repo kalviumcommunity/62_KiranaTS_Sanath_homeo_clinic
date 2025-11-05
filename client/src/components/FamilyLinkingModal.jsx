@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { X, Upload, Users } from 'lucide-react';
 
 const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -9,7 +10,6 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
   const [selectedBranch, setSelectedBranch] = useState('');
   const [selectedDoctorId, setSelectedDoctorId] = useState('');
   
-  // Add new family member form
   const [newMember, setNewMember] = useState({
     name: '',
     phone: '',
@@ -20,7 +20,6 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
   });
   const [picture, setPicture] = useState(null);
 
-  // Fetch doctors and branches when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchDoctorsAndBranches();
@@ -33,23 +32,18 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
       const doctorsData = response.data.doctors || [];
       setDoctors(doctorsData);
       
-      // Extract unique branches from doctors' availability
       const uniqueBranches = [...new Set(
-        doctorsData.flatMap(doc => 
-          doc.availability?.map(avail => avail.branch) || []
-        )
+        doctorsData.flatMap(doc => doc.branches || [])
       )];
+
       setBranches(uniqueBranches);
     } catch (error) {
       console.error('Error fetching doctors:', error);
     }
   };
 
-  // Filter doctors based on selected branch
   const filteredDoctors = selectedBranch 
-    ? doctors.filter(doc => 
-        doc.availability?.some(avail => avail.branch === selectedBranch)
-      )
+    ? doctors.filter(doc => doc.branches?.includes(selectedBranch))
     : doctors;
 
   if (!isOpen) return null;
@@ -59,7 +53,6 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
     setIsLoading(true);
     setMessage('');
 
-    // Validation
     if (!picture) {
       setMessage('Profile picture is required');
       setIsLoading(false);
@@ -75,7 +68,6 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
     try {
       const formData = new FormData();
       
-      // Append all form fields
       formData.append("name", newMember.name);
       formData.append("phone", newMember.phone);
       formData.append("dob", newMember.dob);
@@ -97,7 +89,6 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
 
       if (response.data.message === 'Family member added successfully') {
         setMessage('Family member added successfully!');
-        // Reset form
         setNewMember({ name: '', phone: '', dob: '', gender: '', email: '', relationship_type: 'other' });
         setSelectedBranch('');
         setSelectedDoctorId('');
@@ -119,193 +110,195 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-slate-200">
-          <h2 className="text-xl font-semibold text-slate-800">Add Family Member</h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+        <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-teal-600 p-6 rounded-t-3xl">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <Users className="text-white" size={24} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Add Family Member</h2>
+                <p className="text-emerald-100 text-sm">Expand your family healthcare</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors bg-white/20 hover:bg-white/30 rounded-xl p-2"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="p-6">
           {message && (
-            <div className={`mb-4 p-3 rounded-lg text-sm ${
+            <div className={`mb-4 p-4 rounded-xl text-sm font-medium ${
               message.includes('success') 
-                ? 'bg-green-50 text-green-700 border border-green-200' 
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
                 : 'bg-red-50 text-red-700 border border-red-200'
             }`}>
               {message}
             </div>
           )}
 
-          {/* Family Code Display */}
-          <div className="text-center p-4 bg-blue-50 rounded-lg mb-4">
-            <p className="text-sm text-blue-700">
-              Family Code: <strong>{currentPatient?.family_code}</strong>
-            </p>
-            <p className="text-xs text-blue-600 mt-1">
-              Each family member can choose their own doctor
-            </p>
-          </div>
-
-          <form onSubmit={handleAddNewMember} className="space-y-4">
+          <form onSubmit={handleAddNewMember} className="space-y-5">
             {/* Personal Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-slate-800 mb-2">Personal Information</h3>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Personal Information</h3>
               
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  value={newMember.name}
-                  onChange={(e) => setNewMember({...newMember, name: e.target.value})}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Phone *
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Full Name *
                   </label>
                   <input
-                    type="tel"
-                    value={newMember.phone}
-                    onChange={(e) => setNewMember({...newMember, phone: e.target.value})}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
+                    type="text"
+                    value={newMember.name}
+                    onChange={(e) => setNewMember({...newMember, name: e.target.value})}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Relationship *
-                  </label>
-                  <select
-                    value={newMember.relationship_type}
-                    onChange={(e) => setNewMember({...newMember, relationship_type: e.target.value})}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
-                    required
-                  >
-                    <option value="parent">Parent</option>
-                    <option value="child">Child</option>
-                    <option value="spouse">Spouse</option>
-                    <option value="sibling">Sibling</option>
-                    <option value="grandparent">Grandparent</option>
-                    <option value="grandchild">Grandchild</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Phone *
+                    </label>
+                    <input
+                      type="tel"
+                      value={newMember.phone}
+                      onChange={(e) => setNewMember({...newMember, phone: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                      required
+                    />
+                  </div>
 
-              <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Relationship *
+                    </label>
+                    <select
+                      value={newMember.relationship_type}
+                      onChange={(e) => setNewMember({...newMember, relationship_type: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                      required
+                    >
+                      <option value="parent">Parent</option>
+                      <option value="child">Child</option>
+                      <option value="spouse">Spouse</option>
+                      <option value="sibling">Sibling</option>
+                      <option value="grandparent">Grandparent</option>
+                      <option value="grandchild">Grandchild</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Date of Birth *
+                    </label>
+                    <input
+                      type="date"
+                      value={newMember.dob}
+                      onChange={(e) => setNewMember({...newMember, dob: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Gender *
+                    </label>
+                    <select
+                      value={newMember.gender}
+                      onChange={(e) => setNewMember({...newMember, gender: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                      required
+                    >
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Others">Others</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Date of Birth *
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Email
                   </label>
                   <input
-                    type="date"
-                    value={newMember.dob}
-                    onChange={(e) => setNewMember({...newMember, dob: e.target.value})}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
-                    required
+                    type="email"
+                    value={newMember.email}
+                    onChange={(e) => setNewMember({...newMember, email: e.target.value})}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outlineoutline-none"
                   />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Gender *
-                  </label>
-                  <select
-                    value={newMember.gender}
-                    onChange={(e) => setNewMember({...newMember, gender: e.target.value})}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
-                    required
-                  >
-                    <option value="">Select</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Others">Others</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={newMember.email}
-                  onChange={(e) => setNewMember({...newMember, email: e.target.value})}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
-                />
               </div>
             </div>
 
             {/* Medical Preferences */}
-            <div className="space-y-4 pt-4 border-t border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-800 mb-2">Medical Preferences</h3>
+            <div className="pt-4 border-t border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Medical Preferences</h3>
               
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Preferred Branch *
-                </label>
-                <select 
-                  value={selectedBranch} 
-                  onChange={(e) => {
-                    setSelectedBranch(e.target.value);
-                    setSelectedDoctorId(''); // Reset doctor when branch changes
-                  }}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
-                  required
-                >
-                  <option value="">Select branch</option>
-                  {branches.map(branch => (
-                    <option key={branch} value={branch}>{branch}</option>
-                  ))}
-                </select>
-              </div>
-
-              {selectedBranch && (
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Preferred Doctor *
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Preferred Branch *
                   </label>
                   <select 
-                    value={selectedDoctorId} 
-                    onChange={(e) => setSelectedDoctorId(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-50 transition-all outline-none"
+                    value={selectedBranch} 
+                    onChange={(e) => {
+                      setSelectedBranch(e.target.value);
+                      setSelectedDoctorId('');
+                    }}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
                     required
                   >
-                    <option value="">Select doctor</option>
-                    {filteredDoctors.map(doc => (
-                      <option key={doc._id} value={doc._id}>
-                        {doc.name} - {doc.specialization}
-                      </option>
+                    <option value="">Select branch</option>
+                    {branches.map(branch => (
+                      <option key={branch} value={branch}>{branch}</option>
                     ))}
                   </select>
                 </div>
-              )}
+
+                {selectedBranch && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Preferred Doctor *
+                    </label>
+                    <select 
+                      value={selectedDoctorId} 
+                      onChange={(e) => setSelectedDoctorId(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                      required
+                    >
+                      <option value="">Select doctor</option>
+                      {filteredDoctors.map(doc => (
+                        <option key={doc._id} value={doc._id}>
+                          {doc.name} - {doc.specialization}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Profile Picture */}
-            <div className="pt-4 border-t border-slate-200">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+            <div className="pt-4 border-t border-gray-200">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Profile Picture *
               </label>
-              <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:border-blue-300 transition-colors cursor-pointer">
+              <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-emerald-400 hover:bg-emerald-50/30 transition-all cursor-pointer group">
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -314,12 +307,15 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
                   id="family-picture-upload"
                   required
                 />
-                <label htmlFor="family-picture-upload" className="cursor-pointer">
-                  <svg className="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <p className="text-sm text-slate-600">
+                <label htmlFor="family-picture-upload" className="cursor-pointer block">
+                  <div className="w-16 h-16 mx-auto mb-3 bg-emerald-100 rounded-2xl flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                    <Upload className="w-8 h-8 text-emerald-600" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">
                     {picture ? picture.name : "Click to upload photo"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    JPG, PNG or GIF (Max 5MB)
                   </p>
                 </label>
               </div>
@@ -328,9 +324,19 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
             <button
               type="submit"
               disabled={isLoading || !picture || !selectedBranch || !selectedDoctorId}
-              className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
+              className="w-full px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:shadow-none"
             >
-              {isLoading ? 'Adding Family Member...' : 'Add Family Member'}
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Adding Family Member...
+                </span>
+              ) : (
+                'Add Family Member'
+              )}
             </button>
           </form>
         </div>

@@ -4,6 +4,8 @@ const {createOrUpdateSchedule, getSchedule, addBlockedSlot, addHoliday, deleteSc
 const authMiddleware = require('../middleware/authMiddleware');
 const authorizeRoles = require('../middleware/authRoles');
 
+router.get('/available/:doctorId/:date',
+getAvailableSlots);
 // Create or Update Doctor Schedule
 router.post('/', authMiddleware, authorizeRoles('doctor', 'receptionist'), createOrUpdateSchedule);
 
@@ -19,9 +21,6 @@ router.post('/holiday', authMiddleware, authorizeRoles('doctor', 'receptionist')
 // Delete Schedule
 router.delete('/:doctorId', authMiddleware, authorizeRoles('doctor', 'receptionist'), deleteSchedule);
 
-router.get('/available/:doctorId/:date', authMiddleware, (req, res, next) => {
-      next();
-}, getAvailableSlots);
 
 router.delete('/blocked/:id', authMiddleware, authorizeRoles('doctor','receptionist'), deleteBlockedSlot);
 
