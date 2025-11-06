@@ -4,10 +4,7 @@ import {
   X,
   User,
   Clock,
-  AlertCircle,
-  Calendar,
   CheckCircle,
-  FileText,
   Pill,
 } from "lucide-react";
 import PatientSearch from "./PatientSearch";
@@ -30,54 +27,50 @@ export default function SlotModal({
   const [reason, setReason] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [showCancelInput, setShowCancelInput] = useState(false);
-  
-  // New states for completion functionality
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [prescriptionText, setPrescriptionText] = useState("");
   const [showPrescriptionView, setShowPrescriptionView] = useState(false);
 
-  // ✅ Show feedback message
   const showMessage = (msg, type) => {
     setMessage(msg);
     setMessageType(type);
     setTimeout(() => setMessage(""), 4000);
   };
 
-  // ✅ Fetch appointment details (for "view" mode)
+  // Fetch latest appointment details
   useEffect(() => {
-    if (type === "view") {
+    if (type === "view" && slot && doctorId && date && branch) {
       fetchAppointmentDetails();
     }
-  }, [type]);
+  }, [type, slot, doctorId, date, branch]);
 
   const fetchAppointmentDetails = async () => {
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/api/appointments`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/appointments/doctor-appointments?date=${date}`,
         { withCredentials: true }
       );
 
-      const match = res.data.appointments.find(
-        (a) =>
-          a.doctorId._id === doctorId &&
-          a.appointmentTime === slot.from &&
-          new Date(a.appointmentDate).toISOString().split("T")[0] === date &&
-          a.branch === branch
-      );
+      const sameSlotAppointments = res.data.appointments
+        .filter(
+          (a) =>
+            a.doctorId._id === doctorId &&
+            a.appointmentTime === slot.from &&
+            a.branch === branch &&
+            ["Pending", "Confirmed", "Completed"].includes(a.status)
+        )
+        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
+      const match = sameSlotAppointments[0];
       if (match) {
         setAppointment(match);
-        // If appointment has a prescription, fetch prescription details
-        if (match.prescription) {
-          fetchPrescriptionDetails(match.prescription);
-        }
+        if (match.prescription) fetchPrescriptionDetails(match.prescription);
       }
     } catch (err) {
       console.error("Error fetching appointment details:", err);
     }
   };
 
-  // ✅ Fetch prescription details
   const fetchPrescriptionDetails = async (prescriptionId) => {
     try {
       const res = await axios.get(
@@ -86,12 +79,12 @@ export default function SlotModal({
       );
       setPrescription(res.data.prescription);
     } catch (err) {
-      console.error("Error fetching prescription details:", err);
+      console.error("Error fetching prescription:", err);
       showMessage("Failed to load prescription details", "error");
     }
   };
 
-  // 🟢 Book Appointment
+  // Book a new appointment
   const handleBookAppointment = async () => {
     if (!selectedPatient)
       return showMessage("Please select a patient first", "error");
@@ -123,7 +116,7 @@ export default function SlotModal({
     }
   };
 
-  // 🟡 Confirm Appointment
+  // Confirm a pending appointment
   const handleConfirmAppointment = async () => {
     if (!appointment) return;
 
@@ -146,7 +139,7 @@ export default function SlotModal({
     }
   };
 
-  // 🟥 Cancel Appointment
+  // Cancel appointment
   const handleCancelAppointment = async () => {
     if (!appointment) return;
     if (!cancelReason.trim())
@@ -171,7 +164,7 @@ export default function SlotModal({
     }
   };
 
-  // ✅ Mark as Completed with Prescription
+  // Mark as completed (with prescription)
   const handleCompleteAppointment = async () => {
     if (!prescriptionText.trim()) {
       showMessage("Please write a prescription before completing", "error");
@@ -180,34 +173,29 @@ export default function SlotModal({
 
     try {
       setLoading(true);
-      
-      // First create the prescription
+
       const prescriptionRes = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/prescriptions`,
         {
           appointmentId: appointment._id,
-          medicines: [], // Empty array since we're using text prescription
-          instructions: prescriptionText
+          medicines: [],
+          instructions: prescriptionText,
         },
         { withCredentials: true }
       );
 
-      // Then attach it to the appointment
       await axios.patch(
         `${import.meta.env.VITE_API_BASE_URL}/api/appointments/${appointment._id}/prescription`,
-        {
-          prescriptionId: prescriptionRes.data.prescription._id
-        },
+        { prescriptionId: prescriptionRes.data.prescription._id },
         { withCredentials: true }
       );
 
-      // Finally mark as completed
       await axios.patch(
         `${import.meta.env.VITE_API_BASE_URL}/api/appointments/${appointment._id}/complete`,
         {},
         { withCredentials: true }
       );
-      
+
       showMessage("Appointment completed successfully!", "success");
       setShowCompleteModal(false);
       setPrescriptionText("");
@@ -215,13 +203,15 @@ export default function SlotModal({
       setTimeout(onClose, 1500);
     } catch (err) {
       console.error(err);
-      showMessage(err.response?.data?.message || "Failed to complete appointment", "error");
+      showMessage(
+        err.response?.data?.message || "Failed to complete appointment",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // 🧱 UI Structure
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
@@ -234,25 +224,22 @@ export default function SlotModal({
         </button>
 
         <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          {type === "book"
-            ? "Book Appointment"
-            : "Appointment Details"}
+          {type === "book" ? "Book Appointment" : "Appointment Details"}
         </h2>
 
-        {/* Slot Info */}
+        {/* Slot Information */}
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-5">
           <div className="flex items-center space-x-3 text-gray-700">
             <Clock size={18} />
             <div>
               <p className="text-sm">
-                <span className="font-semibold">Time:</span> {slot.from} -{" "}
-                {slot.to}
+                <strong>Time:</strong> {slot.from} - {slot.to}
               </p>
               <p className="text-sm">
-                <span className="font-semibold">Date:</span> {date}
+                <strong>Date:</strong> {date}
               </p>
               <p className="text-sm">
-                <span className="font-semibold">Branch:</span> {branch}
+                <strong>Branch:</strong> {branch}
               </p>
             </div>
           </div>
@@ -303,11 +290,9 @@ export default function SlotModal({
                   {appointment.patientId.name}
                 </span>
               </div>
-
               <p className="text-sm text-gray-600 mb-1">
                 Phone: {appointment.patientId.phone}
               </p>
-
               <p className="text-sm text-gray-600 mb-3">
                 Status:{" "}
                 <span
@@ -325,7 +310,6 @@ export default function SlotModal({
                 </span>
               </p>
 
-              {/* Prescription Button - Only for Completed appointments */}
               {appointment.status === "Completed" && appointment.prescription && (
                 <button
                   onClick={() => setShowPrescriptionView(true)}
@@ -337,9 +321,8 @@ export default function SlotModal({
               )}
             </div>
 
-            {/* Action Buttons */}
+            {/* Buttons */}
             <div className="space-y-2">
-              {/* Confirm Button - Only for Pending appointments */}
               {appointment.status === "Pending" && (
                 <button
                   onClick={handleConfirmAppointment}
@@ -350,7 +333,6 @@ export default function SlotModal({
                 </button>
               )}
 
-              {/* Complete Button - Only for Confirmed appointments and visible to doctors */}
               {appointment.status === "Confirmed" && (
                 <button
                   onClick={() => setShowCompleteModal(true)}
@@ -361,7 +343,6 @@ export default function SlotModal({
                 </button>
               )}
 
-              {/* Cancel Button */}
               {!showCancelInput ? (
                 <button
                   onClick={() => setShowCancelInput(true)}
@@ -390,7 +371,7 @@ export default function SlotModal({
           </>
         )}
 
-        {/* Message Box */}
+        {/* Message */}
         {message && (
           <div
             className={`mt-4 p-2 text-sm rounded-md ${
@@ -408,7 +389,6 @@ export default function SlotModal({
       {showCompleteModal && appointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
-            {/* Close Button */}
             <button
               onClick={() => setShowCompleteModal(false)}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
@@ -421,7 +401,6 @@ export default function SlotModal({
               <span>Complete Appointment</span>
             </h2>
 
-            {/* Patient Info */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
               <div className="flex items-center space-x-3 mb-2">
                 <User size={18} className="text-emerald-600" />
@@ -430,11 +409,13 @@ export default function SlotModal({
                 </span>
               </div>
               <p className="text-sm text-gray-600">
-                {new Date(appointment.appointmentDate).toLocaleDateString("en-GB")} at {appointment.appointmentTime}
+                {new Date(appointment.appointmentDate).toLocaleDateString(
+                  "en-GB"
+                )}{" "}
+                at {appointment.appointmentTime}
               </p>
             </div>
 
-            {/* Prescription Textarea */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Write Prescription *
@@ -447,11 +428,11 @@ export default function SlotModal({
                 className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Please provide complete prescription details before marking as completed.
+                Please provide complete prescription details before marking as
+                completed.
               </p>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex space-x-3">
               <button
                 onClick={() => setShowCompleteModal(false)}
@@ -462,7 +443,7 @@ export default function SlotModal({
               <button
                 onClick={handleCompleteAppointment}
                 disabled={loading || !prescriptionText.trim()}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center space-x-2"
               >
                 {loading ? (
                   <>
@@ -481,11 +462,10 @@ export default function SlotModal({
         </div>
       )}
 
-      {/* Prescription View Modal */}
+      {/* View Prescription Modal */}
       {showPrescriptionView && prescription && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
-            {/* Close Button */}
             <button
               onClick={() => setShowPrescriptionView(false)}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
@@ -498,7 +478,6 @@ export default function SlotModal({
               <span>Prescription</span>
             </h2>
 
-            {/* Patient Info */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
               <div className="flex items-center space-x-3 mb-2">
                 <User size={18} className="text-emerald-600" />
@@ -507,60 +486,22 @@ export default function SlotModal({
                 </span>
               </div>
               <p className="text-sm text-gray-600">
-                {new Date(appointment.appointmentDate).toLocaleDateString("en-GB")} at {appointment.appointmentTime}
+                {new Date(appointment.appointmentDate).toLocaleDateString(
+                  "en-GB"
+                )}{" "}
+                at {appointment.appointmentTime}
               </p>
             </div>
 
-            {/* Prescription Details */}
             <div className="mb-4">
-              <h3 className="text-lg font-medium text-gray-800 mb-3">Medical Prescription</h3>
-              
-              {/* Medicines List */}
-              {prescription.medicines && prescription.medicines.length > 0 ? (
-                <div className="mb-4">
-                  <h4 className="font-medium text-gray-700 mb-2">Medicines:</h4>
-                  <div className="space-y-2">
-                    {prescription.medicines.map((medicine, index) => (
-                      <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <div className="flex justify-between items-start">
-                          <span className="font-medium text-blue-800">{medicine.name}</span>
-                        </div>
-                        <div className="mt-1 text-sm text-blue-700">
-                          <p><span className="font-medium">Dosage:</span> {medicine.dosage}</p>
-                          <p><span className="font-medium">Timing:</span> {medicine.timing}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                  <p className="text-yellow-800 text-sm">No specific medicines prescribed.</p>
-                </div>
-              )}
-
-              {/* Instructions */}
-              {prescription.instructions && (
-                <div>
-                  <h4 className="font-medium text-gray-700 mb-2">Doctor's Instructions:</h4>
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                    <p className="text-gray-700 whitespace-pre-wrap">{prescription.instructions}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Prescription Metadata */}
-            <div className="border-t border-gray-200 pt-3">
-              <p className="text-xs text-gray-500">
-                Prescribed on: {new Date(prescription.createdAt).toLocaleDateString("en-GB", {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </p>
+              <h3 className="text-lg font-medium text-gray-800 mb-3">
+                Doctor’s Instructions:
+              </h3>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <p className="text-gray-700 whitespace-pre-wrap">
+                  {prescription.instructions}
+                </p>
+              </div>
             </div>
 
             <button

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { X, CheckCircle2, CalendarClock, Loader2, AlertCircle } from "lucide-react";
+import { X, CheckCircle2, CalendarClock } from "lucide-react";
 
 export default function SlotModalPatient({
-  type, // "book" or "view"
+  type,
   slot,
   date,
   doctorId,
@@ -26,7 +26,6 @@ export default function SlotModalPatient({
     setTimeout(() => setMessage(""), 4000);
   };
 
-  // ✅ Book appointment (for logged-in patient)
   const handleBook = async () => {
     if (!reason.trim()) {
       showMessage("Please enter a reason for appointment", "error");
@@ -54,8 +53,6 @@ export default function SlotModalPatient({
       }, 1500);
       
     } catch (err) {
-      console.error('Booking error:', err);
-      
       if (err.response?.status === 409) {
         showMessage('This time slot was just booked by someone else. Please choose another slot.', "error");
         onBooked();
@@ -68,7 +65,6 @@ export default function SlotModalPatient({
     }
   };
 
-  // ✅ Cancel appointment
   const handleCancel = async () => {
     if (!cancelReason.trim()) {
       showMessage("Please enter a cancel reason", "error");
@@ -87,14 +83,12 @@ export default function SlotModalPatient({
         onBooked();
       }, 1500);
     } catch (err) {
-      console.error(err);
       showMessage(err.response?.data?.message || "Failed to cancel appointment", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Reschedule appointment (update date/time)
   const handleReschedule = async () => {
     if (!reason.trim()) {
       showMessage("Please enter a reason for rescheduling", "error");
@@ -117,7 +111,6 @@ export default function SlotModalPatient({
         onBooked();
       }, 1500);
     } catch (err) {
-      console.error(err);
       showMessage(err.response?.data?.message || "Failed to reschedule appointment", "error");
     } finally {
       setLoading(false);
@@ -126,16 +119,13 @@ export default function SlotModalPatient({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative border border-emerald-100 overflow-hidden">
-        {/* Header with Gradient */}
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-6">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-md relative border border-gray-200">
+        <div className="bg-blue-600 p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <CalendarClock className="text-white" size={20} />
-              </div>
+            <div className="flex items-center gap-3">
+              <CalendarClock className="text-white" size={20} />
               <div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-lg font-semibold text-white">
                   {mode === "book"
                     ? "Book Appointment"
                     : mode === "cancel"
@@ -144,7 +134,7 @@ export default function SlotModalPatient({
                     ? "Reschedule Appointment"
                     : "Appointment Details"}
                 </h2>
-                <p className="text-emerald-100 text-sm">
+                <p className="text-blue-100 text-sm">
                   {mode === "book" 
                     ? "Confirm your appointment details"
                     : mode === "cancel"
@@ -156,23 +146,21 @@ export default function SlotModalPatient({
               </div>
             </div>
             <button
-              className="text-white hover:text-emerald-100 transition-colors p-1 rounded-lg hover:bg-white/10"
+              className="text-white hover:text-blue-100 transition-colors"
               onClick={onClose}
             >
-              <X size={22} />
+              <X size={20} />
             </button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Slot Information */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
-            <h3 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Appointment Details</h3>
-            <div className="space-y-2 text-sm">
+        <div className="p-4 space-y-4">
+          <div className="bg-gray-50 border border-gray-200 rounded p-3 space-y-2">
+            <h3 className="font-medium text-gray-900 text-sm">Appointment Details</h3>
+            <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Date:</span>
-                <span className="text-gray-900 font-semibold">
+                <span className="text-gray-600">Date:</span>
+                <span className="font-medium">
                   {new Date(date).toLocaleDateString("en-GB", {
                     weekday: 'short',
                     year: 'numeric',
@@ -182,35 +170,32 @@ export default function SlotModalPatient({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Time:</span>
-                <span className="text-gray-900 font-semibold">{slot.from} - {slot.to}</span>
+                <span className="text-gray-600">Time:</span>
+                <span className="font-medium">{slot.from} - {slot.to}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Branch:</span>
-                <span className="text-gray-900 font-semibold">{branch}</span>
+                <span className="text-gray-600">Branch:</span>
+                <span className="font-medium">{branch}</span>
               </div>
             </div>
           </div>
 
-          {/* Message Display */}
           {message && (
             <div
-              className={`p-4 rounded-xl flex items-center space-x-3 border ${
+              className={`p-3 rounded flex items-center gap-3 border ${
                 messageType === "success"
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  ? "bg-green-50 text-green-700 border-green-200"
                   : "bg-red-50 text-red-700 border-red-200"
               }`}
             >
-              <AlertCircle size={18} />
-              <span className="text-sm font-medium">{message}</span>
+              <span className="text-sm">{message}</span>
             </div>
           )}
 
-          {/* Book Mode */}
           {mode === "book" && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Reason for Appointment
                 </label>
                 <textarea
@@ -218,23 +203,23 @@ export default function SlotModalPatient({
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Please describe the reason for your visit..."
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none resize-none"
-                ></textarea>
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                />
               </div>
 
               <button
                 onClick={handleBook}
                 disabled={loading}
-                className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     <span>Booking...</span>
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 size={20} />
+                    <CheckCircle2 size={18} />
                     <span>Confirm Booking</span>
                   </>
                 )}
@@ -242,11 +227,10 @@ export default function SlotModalPatient({
             </div>
           )}
 
-          {/* Cancel Mode */}
           {mode === "cancel" && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Reason for Cancellation
                 </label>
                 <textarea
@@ -254,23 +238,23 @@ export default function SlotModalPatient({
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
                   placeholder="Please let us know why you need to cancel..."
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all outline-none resize-none"
-                ></textarea>
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none resize-none"
+                />
               </div>
 
               <button
                 onClick={handleCancel}
                 disabled={loading}
-                className="w-full px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+                className="w-full px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     <span>Cancelling...</span>
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 size={20} />
+                    <CheckCircle2 size={18} />
                     <span>Confirm Cancellation</span>
                   </>
                 )}
@@ -278,11 +262,10 @@ export default function SlotModalPatient({
             </div>
           )}
 
-          {/* Reschedule Mode */}
           {mode === "reschedule" && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Reason for Rescheduling
                 </label>
                 <textarea
@@ -290,23 +273,23 @@ export default function SlotModalPatient({
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Please let us know why you need to reschedule..."
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all outline-none resize-none"
-                ></textarea>
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                />
               </div>
 
               <button
                 onClick={handleReschedule}
                 disabled={loading}
-                className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     <span>Rescheduling...</span>
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 size={20} />
+                    <CheckCircle2 size={18} />
                     <span>Confirm Reschedule</span>
                   </>
                 )}
@@ -314,12 +297,9 @@ export default function SlotModalPatient({
             </div>
           )}
 
-          {/* View Mode */}
           {mode === "view" && (
             <div className="text-center py-4">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CalendarClock className="text-gray-400" size={32} />
-              </div>
+              <CalendarClock className="text-gray-400 mx-auto mb-3" size={32} />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">View Only</h3>
               <p className="text-gray-500 text-sm">
                 No actions available for this appointment slot

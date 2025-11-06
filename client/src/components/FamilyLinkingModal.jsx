@@ -23,6 +23,7 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
   useEffect(() => {
     if (isOpen) {
       fetchDoctorsAndBranches();
+      resetForm();
     }
   }, [isOpen]);
 
@@ -35,18 +36,30 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
       const uniqueBranches = [...new Set(
         doctorsData.flatMap(doc => doc.branches || [])
       )];
-
       setBranches(uniqueBranches);
     } catch (error) {
       console.error('Error fetching doctors:', error);
     }
   };
 
+  const resetForm = () => {
+    setNewMember({
+      name: '',
+      phone: '',
+      dob: '',
+      gender: '',
+      email: '',
+      relationship_type: 'other'
+    });
+    setSelectedBranch('');
+    setSelectedDoctorId('');
+    setPicture(null);
+    setMessage('');
+  };
+
   const filteredDoctors = selectedBranch 
     ? doctors.filter(doc => doc.branches?.includes(selectedBranch))
     : doctors;
-
-  if (!isOpen) return null;
 
   const handleAddNewMember = async (e) => {
     e.preventDefault();
@@ -67,7 +80,6 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
 
     try {
       const formData = new FormData();
-      
       formData.append("name", newMember.name);
       formData.append("phone", newMember.phone);
       formData.append("dob", newMember.dob);
@@ -89,16 +101,13 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
 
       if (response.data.message === 'Family member added successfully') {
         setMessage('Family member added successfully!');
-        setNewMember({ name: '', phone: '', dob: '', gender: '', email: '', relationship_type: 'other' });
-        setSelectedBranch('');
-        setSelectedDoctorId('');
-        setPicture(null);
         onFamilyUpdate?.();
-        setTimeout(() => onClose(), 1500);
+        setTimeout(() => {
+          onClose();
+          resetForm();
+        }, 1500);
       }
     } catch (error) {
-      console.error('Add family member error:', error);
-      console.error('Error response:', error.response?.data);
       setMessage(error.response?.data?.message || 'Failed to add family member');
     } finally {
       setIsLoading(false);
@@ -109,24 +118,24 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
     setPicture(e.target.files[0]);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-teal-600 p-6 rounded-t-3xl">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <Users className="text-white" size={24} />
-              </div>
+        <div className="bg-blue-600 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Users className="text-white" size={24} />
               <div>
-                <h2 className="text-2xl font-bold text-white">Add Family Member</h2>
-                <p className="text-emerald-100 text-sm">Expand your family healthcare</p>
+                <h2 className="text-lg font-semibold text-white">Add Family Member</h2>
+                <p className="text-blue-100 text-sm">Expand your family healthcare</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-white/80 hover:text-white transition-colors bg-white/20 hover:bg-white/30 rounded-xl p-2"
+              className="text-white hover:text-blue-100 transition-colors"
             >
               <X size={20} />
             </button>
@@ -134,58 +143,58 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4">
           {message && (
-            <div className={`mb-4 p-4 rounded-xl text-sm font-medium ${
+            <div className={`mb-4 p-3 rounded text-sm ${
               message.includes('success') 
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                ? 'bg-green-50 text-green-700 border border-green-200' 
                 : 'bg-red-50 text-red-700 border border-red-200'
             }`}>
               {message}
             </div>
           )}
 
-          <form onSubmit={handleAddNewMember} className="space-y-5">
+          <form onSubmit={handleAddNewMember} className="space-y-4">
             {/* Personal Information */}
             <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Personal Information</h3>
+              <h3 className="text-base font-semibold text-gray-900 mb-3">Personal Information</h3>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Full Name *
                   </label>
                   <input
                     type="text"
                     value={newMember.name}
                     onChange={(e) => setNewMember({...newMember, name: e.target.value})}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                    className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                     required
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Phone *
                     </label>
                     <input
                       type="tel"
                       value={newMember.phone}
                       onChange={(e) => setNewMember({...newMember, phone: e.target.value})}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                      className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Relationship *
                     </label>
                     <select
                       value={newMember.relationship_type}
                       onChange={(e) => setNewMember({...newMember, relationship_type: e.target.value})}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                      className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                       required
                     >
                       <option value="parent">Parent</option>
@@ -199,28 +208,28 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Date of Birth *
                     </label>
                     <input
                       type="date"
                       value={newMember.dob}
                       onChange={(e) => setNewMember({...newMember, dob: e.target.value})}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                      className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Gender *
                     </label>
                     <select
                       value={newMember.gender}
                       onChange={(e) => setNewMember({...newMember, gender: e.target.value})}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                      className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                       required
                     >
                       <option value="">Select</option>
@@ -232,26 +241,26 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email
                   </label>
                   <input
                     type="email"
                     value={newMember.email}
                     onChange={(e) => setNewMember({...newMember, email: e.target.value})}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outlineoutline-none"
+                    className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                   />
                 </div>
               </div>
             </div>
 
             {/* Medical Preferences */}
-            <div className="pt-4 border-t border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Medical Preferences</h3>
+            <div className="pt-3 border-t border-gray-200">
+              <h3 className="text-base font-semibold text-gray-900 mb-3">Medical Preferences</h3>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Preferred Branch *
                   </label>
                   <select 
@@ -260,7 +269,7 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
                       setSelectedBranch(e.target.value);
                       setSelectedDoctorId('');
                     }}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                    className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                     required
                   >
                     <option value="">Select branch</option>
@@ -272,13 +281,13 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
 
                 {selectedBranch && (
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Preferred Doctor *
                     </label>
                     <select 
                       value={selectedDoctorId} 
                       onChange={(e) => setSelectedDoctorId(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                      className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                       required
                     >
                       <option value="">Select doctor</option>
@@ -294,11 +303,11 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
             </div>
 
             {/* Profile Picture */}
-            <div className="pt-4 border-t border-gray-200">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <div className="pt-3 border-t border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Profile Picture *
               </label>
-              <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-emerald-400 hover:bg-emerald-50/30 transition-all cursor-pointer group">
+              <div className="border-2 border-dashed border-gray-300 rounded p-4 text-center hover:border-blue-400 transition-colors cursor-pointer">
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -308,10 +317,10 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
                   required
                 />
                 <label htmlFor="family-picture-upload" className="cursor-pointer block">
-                  <div className="w-16 h-16 mx-auto mb-3 bg-emerald-100 rounded-2xl flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                    <Upload className="w-8 h-8 text-emerald-600" />
+                  <div className="w-12 h-12 mx-auto mb-2 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Upload className="w-6 h-6 text-blue-600" />
                   </div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">
+                  <p className="text-sm text-gray-700 mb-1">
                     {picture ? picture.name : "Click to upload photo"}
                   </p>
                   <p className="text-xs text-gray-500">
@@ -324,14 +333,11 @@ const FamilyLinkingModal = ({ isOpen, onClose, currentPatient, onFamilyUpdate })
             <button
               type="submit"
               disabled={isLoading || !picture || !selectedBranch || !selectedDoctorId}
-              className="w-full px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:shadow-none"
+              className="w-full p-3 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
                   Adding Family Member...
                 </span>
               ) : (

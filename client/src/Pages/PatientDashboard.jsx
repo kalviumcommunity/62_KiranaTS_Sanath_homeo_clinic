@@ -58,23 +58,23 @@ const PatientDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg shadow-sm border-b border-emerald-100 sticky top-0 z-40">
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                <User className="text-white" size={20} />
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+                <User className="text-white" size={18} />
               </div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              <h1 className="text-lg font-semibold text-gray-900">
                 Patient Portal
               </h1>
             </div>
@@ -88,21 +88,21 @@ const PatientDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Welcome Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-emerald-100">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900">
                 Welcome back, {currentPatient?.name}!
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-600 mt-1">
                 Manage your appointments and healthcare journey
               </p>
             </div>
-            <div className="hidden sm:flex items-center space-x-2 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-200">
-              <span className="text-xs font-medium text-emerald-700">Family Code:</span>
-              <code className="text-sm font-mono font-semibold text-emerald-800">
+            <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded border border-blue-200">
+              <span className="text-xs font-medium text-blue-700">Family Code:</span>
+              <code className="text-sm font-mono font-semibold text-blue-800">
                 {currentPatient?.family_code}
               </code>
             </div>
@@ -110,38 +110,38 @@ const PatientDashboard = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           <button
             onClick={() => setActiveTab("overview")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
               activeTab === "overview"
-                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-200"
-                : "bg-white text-gray-700 hover:bg-emerald-50 border border-gray-200"
+                ? "bg-blue-600 text-white shadow"
+                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
             }`}
           >
-            <User size={18} />
+            <User size={16} />
             <span>Overview</span>
           </button>
           <button
             onClick={() => setActiveTab("book")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
               activeTab === "book"
-                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-200"
-                : "bg-white text-gray-700 hover:bg-emerald-50 border border-gray-200"
+                ? "bg-blue-600 text-white shadow"
+                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
             }`}
           >
-            <Clock size={18} />
+            <Clock size={16} />
             <span>Book Appointment</span>
           </button>
           <button
             onClick={() => setActiveTab("appointments")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
               activeTab === "appointments"
-                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-200"
-                : "bg-white text-gray-700 hover:bg-emerald-50 border border-gray-200"
+                ? "bg-blue-600 text-white shadow"
+                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
             }`}
           >
-            <CalendarDays size={18} />
+            <CalendarDays size={16} />
             <span>My Appointments</span>
           </button>
         </div>
@@ -149,30 +149,30 @@ const PatientDashboard = () => {
         {/* Tab Content */}
         <div>
           {activeTab === "overview" && (
-            <div className="bg-white rounded-2xl shadow-lg p-8 border border-emerald-100">
+            <div className="bg-white rounded-lg shadow p-6">
               <div className="max-w-2xl">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Your Profile
                 </h3>
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
-                    <span className="text-sm font-medium text-gray-600 w-32">Relationship:</span>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+                    <span className="text-sm font-medium text-gray-600 w-24">Relationship:</span>
                     <span className="text-sm text-gray-900 capitalize">{currentPatient?.relationship_type}</span>
                   </div>
-                  <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
-                    <span className="text-sm font-medium text-gray-600 w-32">Phone:</span>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+                    <span className="text-sm font-medium text-gray-600 w-24">Phone:</span>
                     <span className="text-sm text-gray-900">{currentPatient?.phone}</span>
                   </div>
                   {currentPatient?.email && (
-                    <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
-                      <span className="text-sm font-medium text-gray-600 w-32">Email:</span>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+                      <span className="text-sm font-medium text-gray-600 w-24">Email:</span>
                       <span className="text-sm text-gray-900">{currentPatient?.email}</span>
                     </div>
                   )}
                 </div>
-                <div className="mt-6 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
-                  <p className="text-sm text-emerald-800">
-                    💡 <strong>Quick tip:</strong> Use the tabs above to book new appointments or manage existing ones.
+                <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    Use the tabs above to book new appointments or manage existing ones.
                   </p>
                 </div>
               </div>
