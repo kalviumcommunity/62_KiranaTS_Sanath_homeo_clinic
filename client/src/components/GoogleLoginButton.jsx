@@ -24,7 +24,6 @@ const GoogleLoginButton = ({ formData, onSuccess, onError, disabled }) => {
         doctorId: formData.doctorId
       };
 
-      console.log('Sending Google signup to backend:', requestData);
 
       const res = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/auth/google`,
@@ -35,13 +34,11 @@ const GoogleLoginButton = ({ formData, onSuccess, onError, disabled }) => {
         }
       );
 
-      console.log('Google Signup Success:', res.data);
 
       // Extract family_code from backend response
       const patientFamilyCode = res.data?.patient?.family_code;
       if (patientFamilyCode) {
         setFamilyCode(patientFamilyCode);
-        console.log('Family code:', patientFamilyCode);
       }
 
       if (onSuccess) {

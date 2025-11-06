@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Clock, Search, AlertCircle, Calendar, Sparkles } from "lucide-react";
+import { Clock, Search, AlertCircle, Calendar } from "lucide-react";
 import SlotCard from "../doctor/SlotCard";
 import SlotModalPatient from "./SlotModalPatient";
+import { socket } from "../../socket";
 
 export default function AvailableSlotsPatient() {
   const [doctors, setDoctors] = useState([]);
@@ -20,14 +21,22 @@ export default function AvailableSlotsPatient() {
 
   useEffect(() => {
     fetchDoctors();
-  }, []);
+
+    socket.on("appointmentStatusUpdated", (data) => {
+      if (data.doctorId === selectedDoctorId && data.branch === branch) {
+        fetchSlots();
+      }
+    });
+
+    return () => socket.off("appointmentStatusUpdated");
+  }, [selectedDoctorId, branch, date]);
 
   const fetchDoctors = async () => {
     try {
       const res = await axios.get(`${api}/api/doctors`, { withCredentials: true });
       setDoctors(res.data.doctors || []);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching doctors:", err);
     }
   };
 
@@ -62,7 +71,6 @@ export default function AvailableSlotsPatient() {
       setSlots(res.data.slots || []);
       showMessage(`Found ${res.data.slots?.length || 0} available slots`, "success");
     } catch (err) {
-      console.error(err);
       showMessage(err.response?.data?.message || "Error fetching slots", "error");
       setSlots([]);
     } finally {
@@ -73,42 +81,38 @@ export default function AvailableSlotsPatient() {
   const handleSlotClick = (slot) => {
     const today = new Date().toISOString().split("T")[0];
     const selected = new Date(date).toISOString().split("T")[0];
-    if (selected < today) setModalType("view");
-    else setModalType("book");
+    setModalType(selected < today ? "view" : "book");
     setSelectedSlot(slot);
   };
 
   return (
-    <div className="space-y-6">
-      {/* Search Card */}
-      <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-6">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <Clock className="text-white" size={24} />
-            </div>
+    <div className="space-y-6 p-4">
+      {/* Search Section */}
+      <div className="bg-white rounded-lg shadow border border-gray-200">
+        <div className="bg-blue-600 p-4">
+          <div className="flex items-center gap-3">
+            <Clock className="text-white" size={24} />
             <div>
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-xl font-semibold text-white">
                 Find Available Slots
               </h1>
-              <p className="text-emerald-100 text-sm mt-1">
+              <p className="text-blue-100 text-sm">
                 Select your preferences to view available appointments
               </p>
             </div>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Doctor Dropdown */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Doctor
               </label>
               <select
                 value={selectedDoctorId}
                 onChange={(e) => setSelectedDoctorId(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               >
                 <option value="">Choose Doctor</option>
                 {doctors.map((d) => (
@@ -119,15 +123,14 @@ export default function AvailableSlotsPatient() {
               </select>
             </div>
 
-            {/* Branch Dropdown */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Branch
               </label>
               <select
                 value={branch}
                 onChange={(e) => setBranch(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               >
                 <option value="">Choose Branch</option>
                 <option value="Horamavu">Horamavu</option>
@@ -136,34 +139,32 @@ export default function AvailableSlotsPatient() {
               </select>
             </div>
 
-            {/* Date Picker */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Date
               </label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>
 
-            {/* Search Button */}
             <div className="flex items-end">
               <button
                 onClick={fetchSlots}
                 disabled={loading}
-                className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+                className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     <span>Searching...</span>
                   </>
                 ) : (
                   <>
-                    <Search size={20} />
+                    <Search size={18} />
                     <span>Search Slots</span>
                   </>
                 )}
@@ -171,39 +172,33 @@ export default function AvailableSlotsPatient() {
             </div>
           </div>
 
-          {/* Message */}
           {message && (
             <div
-              className={`mt-4 p-4 rounded-xl flex items-center space-x-3 border ${
+              className={`mt-4 p-3 rounded-lg flex items-center gap-3 border ${
                 messageType === "success"
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : messageType === "error"
-                  ? "bg-red-50 text-red-700 border-red-200"
-                  : "bg-blue-50 text-blue-700 border-blue-200"
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : "bg-red-50 text-red-700 border-red-200"
               }`}
             >
-              <AlertCircle size={18} />
-              <span className="text-sm font-medium">{message}</span>
+              <AlertCircle size={16} />
+              <span className="text-sm">{message}</span>
             </div>
           )}
         </div>
       </div>
 
       {/* Slots Display */}
-      <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
+      <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-            <p className="text-gray-500 font-medium">Loading available slots...</p>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+            <p className="text-gray-600">Loading available slots...</p>
           </div>
         ) : slots.length > 0 ? (
           <>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-gray-900">Available Time Slots</h3>
-              <div className="flex items-center space-x-2 text-emerald-600">
-                <Sparkles size={18} />
-                <span className="text-sm font-semibold">{slots.length} slots available</span>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Available Time Slots</h3>
+              <span className="text-sm text-gray-600">{slots.length} slots available</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {slots.map((slot, idx) => (
@@ -216,10 +211,8 @@ export default function AvailableSlotsPatient() {
             </div>
           </>
         ) : (
-          <div className="text-center py-16">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Calendar className="text-gray-300" size={40} />
-            </div>
+          <div className="text-center py-8">
+            <Calendar className="text-gray-300 mx-auto mb-3" size={40} />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No Slots to Display</h3>
             <p className="text-gray-500 text-sm">
               Select doctor, branch & date to view available appointments
@@ -228,7 +221,6 @@ export default function AvailableSlotsPatient() {
         )}
       </div>
 
-      {/* Modal */}
       {selectedSlot && (
         <SlotModalPatient
           type={modalType}

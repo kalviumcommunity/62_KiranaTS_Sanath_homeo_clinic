@@ -1,9 +1,10 @@
-// controllers/appointmentController.js
 const mongoose = require('mongoose');
 const Appointment = require('../models/Appointments');
 const Patient = require('../models/Patient');
 const Doctor = require('../models/Doctor');
 const DoctorSchedule = require('../models/doctorSchedule');
+const { io, getReceiverSocketId } = require("../lib/socket");
+
 
 const createAppointment = async (req, res) => {
     const session = await mongoose.startSession();
@@ -82,6 +83,13 @@ const createAppointment = async (req, res) => {
         res.status(201).json({
             message: 'Appointment successfully booked',
             appointment: populatedAppointment
+        });
+        io.emit("appointmentStatusUpdated", {
+            appointmentId: populatedAppointment._id,
+            newStatus: populatedAppointment.status,
+            doctorId: populatedAppointment.doctorId._id.toString(),
+            patientId: populatedAppointment.patientId._id.toString(),
+            updatedBy: "patient"
         });
 
     } catch (err) {
@@ -212,7 +220,10 @@ const getAllAppointments = async (req, res) => {
 const getAppointmentsByDoctor = async (req, res) => {
     const doctorId = req.user.id;
     try {
-        const appointments = await Appointment.find({ doctorId })
+        const appointments = await Appointment.find({
+            doctorId,
+            status: { $in: ["Pending", "Confirmed", "Completed"] },
+        })
             .populate('patientId', 'name phone email picture')
             .populate('doctorId', 'name specialization')
             .populate('confirmedBy', 'name')
@@ -228,8 +239,10 @@ const getDoctorAppointments = async (req, res) => {
         const doctorId = req.user.id;
         const { date } = req.query;
         
-        let query = { doctorId };
-        
+        const query = { 
+            doctorId, 
+            status: { $in: ["Pending", "Confirmed", "Completed"] } 
+        };
         if (date) {
             const startDate = new Date(date);
             const endDate = new Date(date);
@@ -410,6 +423,13 @@ const cancelAppointment = async (req, res) => {
             message: 'Appointment cancelled successfully',
             appointment: updatedAppointment
         });
+        io.emit("appointmentStatusUpdated", {
+            appointmentId: appointment._id,
+            newStatus: "Cancelled",
+            doctorId: appointment.doctorId._id.toString(),
+            patientId: appointment.patientId._id.toString(),
+            updatedBy: req.user.role
+        });
     } catch (error) {
         res.status(500).json({ 
             message: 'Failed to cancel appointment', 
@@ -465,6 +485,13 @@ const markAppointmentCompleted = async (req, res) => {
     await appointment.save();
 
     res.status(200).json({ message: 'Appointment marked as completed ✅', appointment });
+    io.emit("appointmentStatusUpdated", {
+        appointmentId: appointment._id,
+        newStatus: appointment.status,
+        doctorId: appointment.doctorId.toString(),
+        patientId: appointment.patientId._id.toString(),
+        updatedBy: "doctor"
+    });
   } catch (error) {
     res.status(500).json({ message: 'Failed to mark appointment completed', error: error.message });
   }

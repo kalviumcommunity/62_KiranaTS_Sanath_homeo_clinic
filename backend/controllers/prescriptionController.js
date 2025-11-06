@@ -57,7 +57,6 @@ const getPrescriptionById = async (req, res) => {
   try {
     const { prescriptionId } = req.params;
     
-    console.log('Fetching prescription with ID:', prescriptionId); // Add logging
     
     if (!mongoose.Types.ObjectId.isValid(prescriptionId)) {
       return res.status(400).json({ message: 'Invalid prescription ID' });
@@ -67,7 +66,6 @@ const getPrescriptionById = async (req, res) => {
       .populate('doctorId', 'name specialization')
       .populate('patientId', 'name phone');
 
-    console.log('Found prescription:', prescription); // Add logging
 
     if (!prescription) {
       return res.status(404).json({ message: 'Prescription not found' });

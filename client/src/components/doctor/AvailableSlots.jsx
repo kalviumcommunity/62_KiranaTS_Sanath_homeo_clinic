@@ -3,6 +3,7 @@ import axios from "axios";
 import { Clock, Calendar, Search, AlertCircle } from "lucide-react";
 import SlotCard from "./SlotCard";
 import SlotModal from "./SlotModal";
+import { socket } from "../../socket"; 
 
 export default function AvailableSlots({ doctorId }) {
   const [date, setDate] = useState("");
@@ -15,6 +16,7 @@ export default function AvailableSlots({ doctorId }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [modalType, setModalType] = useState("");
 
+  // Set the doctorId from props or local storage
   useEffect(() => {
     if (doctorId) {
       setCurrentDoctorId(doctorId);
@@ -26,84 +28,95 @@ export default function AvailableSlots({ doctorId }) {
     }
   }, [doctorId]);
 
+  // Helper function to show temporary messages
   const showMessage = (msg, type) => {
     setMessage(msg);
     setMessageType(type);
     setTimeout(() => setMessage(""), 4000);
   };
 
+  // Fetch all available and booked slots for selected date and branch
   const fetchSlots = async () => {
-  if (!currentDoctorId) {
-    showMessage("Please select a doctor first", "error");
-    return;
-  }
-  if (!date) {
-    showMessage("Please select a date", "error");
-    return;
-  }
-  if (!branch) {
-    showMessage("Please select a branch", "error");
-    return;
-  }
+    if (!currentDoctorId) {
+      showMessage("Please select a doctor first", "error");
+      return;
+    }
+    if (!date) {
+      showMessage("Please select a date", "error");
+      return;
+    }
+    if (!branch) {
+      showMessage("Please select a branch", "error");
+      return;
+    }
 
-  setLoading(true);
-  setMessage("");
+    setLoading(true);
+    setMessage("");
 
-  try {
-    // Fetch raw available slots (from schedule)
-    const res = await axios.get(
-      `${import.meta.env.VITE_API_BASE_URL}/api/schedule/available/${currentDoctorId}/${date}?branch=${branch}`,
-      { withCredentials: true }
-    );
-
-    // Fetch all appointments for that doctor on the same date
-    const appRes = await axios.get(
-      `${import.meta.env.VITE_API_BASE_URL}/api/appointments/doctor-appointments?date=${date}`,
-      { withCredentials: true }
-    );
-
-    const bookedAppointments = appRes.data.appointments.filter(
-      (a) =>
-        a.branch === branch &&
-        ["Pending", "Confirmed", "Completed"].includes(a.status)
-    );
-
-    // Map the slots to show booked info for completed ones too
-    const mergedSlots = res.data.slots.map((slot) => {
-      const match = bookedAppointments.find(
-        (a) => a.appointmentTime === slot.from
+    try {
+      // Get the doctor's available slots from their schedule
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/schedule/available/${currentDoctorId}/${date}?branch=${branch}`,
+        { withCredentials: true }
       );
-      if (match) {
-        return {
-          ...slot,
-          booked: true,
-          status: match.status,
-          patientName: match.patientId?.name,
-          patientPhone: match.patientId?.phone,
-        };
-      }
-      return { ...slot, booked: false };
-    });
 
-    setSlots(mergedSlots);
-    showMessage(`Found ${mergedSlots.length} slots`, "success");
-  } catch (err) {
-    console.error(err);
-    showMessage(err.response?.data?.message || "Error fetching slots", "error");
-    setSlots([]);
-  } finally {
-    setLoading(false);
-  }
-};
+      // Get all appointments for that doctor on that date
+      const appRes = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/appointments/doctor-appointments?date=${date}`,
+        { withCredentials: true }
+      );
 
+      // Filter out only the booked (active) ones for that branch
+      const bookedAppointments = appRes.data.appointments.filter(
+        (a) =>
+          a.branch === branch &&
+          ["Pending", "Confirmed", "Completed"].includes(a.status)
+      );
 
+      // Merge available slots with booked ones (most recent wins)
+      const mergedSlots = res.data.slots.map((slot) => {
+        const sameTimeAppointments = bookedAppointments.filter(
+          (a) => a.appointmentTime === slot.from
+        );
+
+        // Sort by updatedAt to ensure we pick the latest one
+        sameTimeAppointments.sort(
+          (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+        );
+
+        const latest = sameTimeAppointments[0];
+
+        if (latest) {
+          return {
+            ...slot,
+            booked: true,
+            status: latest.status,
+            patientName: latest.patientId?.name,
+            patientPhone: latest.patientId?.phone,
+          };
+        }
+
+        return { ...slot, booked: false };
+      });
+
+      setSlots(mergedSlots);
+      showMessage(`Found ${mergedSlots.length} slots`, "success");
+    } catch (err) {
+      console.error(err);
+      showMessage(err.response?.data?.message || "Error fetching slots", "error");
+      setSlots([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handles clicking on a slot (opens view or book modal)
   const handleSlotClick = (slot) => {
     const today = new Date().toISOString().split("T")[0];
     const selected = new Date(date).toISOString().split("T")[0];
 
-    // If selected date is in the past
     if (selected < today) {
-      setModalType("view"); // only allow viewing
+      setModalType("view");
     } else if (slot.booked) {
       setModalType("view");
     } else {
@@ -113,6 +126,25 @@ export default function AvailableSlots({ doctorId }) {
     setSelectedSlot(slot);
   };
 
+  // Real-time updates using Socket.io
+  useEffect(() => {
+    if (!currentDoctorId) return;
+
+    socket.on("appointmentStatusUpdated", (data) => {
+      console.log("Real-time update received:", data);
+
+      if (data.doctorId === currentDoctorId) {
+        showMessage(`Live update: Appointment ${data.newStatus}`, "info");
+        // Clear old data and refetch fresh slots
+        setSlots([]);
+        setTimeout(() => fetchSlots(), 150);
+      }
+    });
+
+    return () => {
+      socket.off("appointmentStatusUpdated");
+    };
+  }, [currentDoctorId, date, branch]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -133,9 +165,9 @@ export default function AvailableSlots({ doctorId }) {
             </div>
           </div>
 
-          {/* Search Form */}
+          {/* Filters */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-            {/* Branch Dropdown */}
+            {/* Branch */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Branch
@@ -152,7 +184,7 @@ export default function AvailableSlots({ doctorId }) {
               </select>
             </div>
 
-            {/* Date Picker */}
+            {/* Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Date
@@ -165,7 +197,7 @@ export default function AvailableSlots({ doctorId }) {
               />
             </div>
 
-            {/* Search Button */}
+            {/* Search */}
             <div className="flex items-end">
               <button
                 onClick={fetchSlots}
@@ -204,7 +236,7 @@ export default function AvailableSlots({ doctorId }) {
           )}
         </div>
 
-        {/* Slots Display */}
+        {/* Slots */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           {loading ? (
             <div className="text-center text-gray-500 py-8">Loading slots...</div>
