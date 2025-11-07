@@ -10,6 +10,7 @@ const receptionistRoutes = require("./routes/receptionistRoutes");
 const appointmentRoutes = require("./routes/appointmentRoutes");
 const prescriptionRoutes = require("./routes/prescriptionRoute");
 const doctorScheduleRoutes = require("./routes/doctorScheduleRoutes");
+const googleCalendar= require("./routes/googleCalendar");
 const authRoutes = require("./routes/authRoutes");
 
 const { app, server } = require("./lib/socket");
@@ -35,6 +36,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/schedule", doctorScheduleRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/google/calendar", googleCalendar);
 
 mongoose
   .connect(process.env.MONGO_URI)

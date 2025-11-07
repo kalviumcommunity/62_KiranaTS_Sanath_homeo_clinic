@@ -19,6 +19,7 @@ import ManageExceptions from './components/doctor/ManageExceptions'
 import AvailableSlots from './components/doctor/AvailableSlots'
 import AvailableSlotsPatient from './components/patients/AvailableSlotsPatient'
 import MyAppointments from './components/patients/MyAppointments'
+import CalendarConnect from './components/doctor/CalendarConnect'
 
 
 
@@ -59,6 +60,7 @@ function App() {
           <Route path="schedule" element={<DoctorSchedule />} />
           <Route path="exceptions" element={<ManageExceptions />} />
           <Route path="available" element={<AvailableSlots />} />
+          <Route path="/dashboard-doctor/calendar-connect" element={<CalendarConnect />} />
         </Route>
         <Route
           path="/dashboard-receptionist"

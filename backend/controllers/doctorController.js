@@ -1,4 +1,5 @@
 const Doctor = require("../models/Doctor");
+Doctor.schema.set('strict', false);
 const jwt = require('jsonwebtoken');
 const cookie = require('cookie-parser');
 const bcrypt = require('bcryptjs');
