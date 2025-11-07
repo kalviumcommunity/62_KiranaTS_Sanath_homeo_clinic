@@ -1,6 +1,5 @@
-import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Calendar, CalendarX, Clock, Users, UserCircle, LogOut, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Calendar, CalendarX, Clock, Users, UserCircle, LogOut, Link as LinkIcon } from "lucide-react";
 
 export default function Sidebar() {
   const location = useLocation();
@@ -18,6 +17,7 @@ export default function Sidebar() {
     { path: '/dashboard-doctor/available', label: 'Available Slots', icon: Clock },
     { path: '/dashboard-doctor/patients', label: 'Patients', icon: Users },
     { path: '/dashboard-doctor/profile', label: 'Profile', icon: UserCircle },
+    { path: '/dashboard-doctor/calendar-connect', label: 'Connect Calendar', icon: LinkIcon },
   ];
 
   return (

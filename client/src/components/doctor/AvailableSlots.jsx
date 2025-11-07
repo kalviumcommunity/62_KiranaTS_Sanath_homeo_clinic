@@ -76,8 +76,11 @@ export default function AvailableSlots({ doctorId }) {
       // Merge available slots with booked ones (most recent wins)
       const mergedSlots = res.data.slots.map((slot) => {
         const sameTimeAppointments = bookedAppointments.filter(
-          (a) => a.appointmentTime === slot.from
+          (a) =>
+            a.appointmentTime === slot.from &&
+            new Date(a.appointmentDate).toISOString().split("T")[0] === date
         );
+
 
         // Sort by updatedAt to ensure we pick the latest one
         sameTimeAppointments.sort(

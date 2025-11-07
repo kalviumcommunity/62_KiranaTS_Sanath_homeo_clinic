@@ -18,6 +18,7 @@ const doctorSchema = new mongoose.Schema({
     enum: ["Horamavu", "Hennur", "Kammanahalli"],
     default: [],
   },
+  googleTokens: { type: Object, default: null }
 });
 
 const Doctor = mongoose.model('Doctor', doctorSchema, 'Doctors');
